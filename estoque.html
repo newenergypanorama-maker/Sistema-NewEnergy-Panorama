@@ -9,43 +9,43 @@
 <body>
 
 <header>
-  <div class="logo">
-    <img src="logo.png">
-    <h1>NewEnergy - Panorama Health</h1>
-  </div>
-  <button onclick="window.location.href='painel.html'">Voltar</button>
+  <img src="logo.png" class="logo">
+  <h1>NewEnergy - Panorama Health</h1>
 </header>
 
 <div class="container">
-  <div class="card">
-    <h2>Controle de Estoque Hospitalar</h2>
+  <h2>Controle de Estoque Hospitalar</h2>
 
-    <input type="text" id="produto" placeholder="Nome do Produto">
-    <input type="number" id="quantidade" placeholder="Quantidade">
-    <button onclick="adicionarProduto()">Adicionar</button>
+  <table>
+    <tr><th>Produto</th><th>Quantidade</th><th>Validade</th></tr>
+    <tr><td>Máscara Cirúrgica</td><td>200</td><td>01/2026</td></tr>
+    <tr><td>Luvas Estéreis</td><td>500</td><td>02/2026</td></tr>
+  </table>
 
-    <ul id="lista"></ul>
-  </div>
+  <button class="primary" onclick="window.location.href='painel.html'">
+    Voltar ao Painel
+  </button>
 </div>
 
-<script>
-function adicionarProduto() {
-  const produto = document.getElementById("produto").value;
-  const quantidade = document.getElementById("quantidade").value;
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-  if (!produto || !quantidade) {
-    alert("Preencha todos os campos.");
-    return;
-  }
+const firebaseConfig = {
+  apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
+  authDomain: "sistema-newenergy-panora-24697.firebaseapp.com",
+  projectId: "sistema-newenergy-panora-24697",
+  storageBucket: "sistema-newenergy-panora-24697.firebasestorage.app",
+  messagingSenderId: "503251309234",
+  appId: "1:503251309234:web:8f4d905e5e4b1f496befab"
+};
 
-  const li = document.createElement("li");
-  li.textContent = produto + " - Quantidade: " + quantidade;
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-  document.getElementById("lista").appendChild(li);
-
-  document.getElementById("produto").value = "";
-  document.getElementById("quantidade").value = "";
-}
+onAuthStateChanged(auth, user => {
+  if (!user) window.location.href = "login.html";
+});
 </script>
 
 </body>
