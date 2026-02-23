@@ -33,7 +33,7 @@ header h1 {
   font-weight: 600;
 }
 
-/* MAIN CONTENT */
+/* MAIN */
 .main {
   width: 100%;
   display: flex;
@@ -41,7 +41,7 @@ header h1 {
   padding: 40px 20px;
 }
 
-/* CARD CONTAINER */
+/* CARD */
 .container {
   background: white;
   width: 100%;
@@ -118,7 +118,6 @@ th {
 
 /* RESPONSIVO */
 @media (max-width: 768px) {
-
   header {
     flex-direction: column;
     text-align: center;
@@ -132,5 +131,4 @@ th {
   .container {
     padding: 20px;
   }
-
 }
