@@ -8,19 +8,63 @@
 
 <body>
 
-<header>
-  <div class="logo">
-    <img src="logo.png">
-    <h1>NewEnergy - Panorama Health</h1>
-  </div>
-</header>
-
 <div class="container">
-  <div class="card">
-    <h2>Login do Sistema</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="senha" placeholder="Senha">
-    <button onclick="login()">Entrar</button>
-    <button onclick="loginGoogle()">Entrar com Google</button>
-  </div>
+  <img src="logo.png" class="logo">
+  <h2>Entrar no Sistema</h2>
+
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="senha" placeholder="Senha">
+
+  <button class="primary" onclick="login()">Entrar</button>
+  <button class="google" onclick="loginGoogle()">Entrar com Google</button>
 </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
+  authDomain: "sistema-newenergy-panora-24697.firebaseapp.com",
+  projectId: "sistema-newenergy-panora-24697",
+  storageBucket: "sistema-newenergy-panora-24697.firebasestorage.app",
+  messagingSenderId: "503251309234",
+  appId: "1:503251309234:web:8f4d905e5e4b1f496befab"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    window.location.href = "painel.html";
+  }
+});
+
+window.login = function() {
+  const email = document.getElementById("email").value;
+  const senha = document.getElementById("senha").value;
+
+  signInWithEmailAndPassword(auth, email, senha)
+    .then(() => {
+      window.location.href = "painel.html";
+    })
+    .catch((error) => {
+      alert("Erro no login: " + error.message);
+    });
+};
+
+window.loginGoogle = function() {
+  const provider = new GoogleAuthProvider();
+  signInWithPopup(auth, provider)
+    .then(() => {
+      window.location.href = "painel.html";
+    })
+    .catch((error) => {
+      alert("Erro no login Google: " + error.message);
+    });
+};
+</script>
+
+</body>
+</html>
