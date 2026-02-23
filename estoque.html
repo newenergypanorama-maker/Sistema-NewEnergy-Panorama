@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Estoque - NewEnergy Panorama Health</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+  <div class="logo">
+    <img src="logo.png">
+    <h1>NewEnergy - Panorama Health</h1>
+  </div>
+  <button onclick="window.location.href='painel.html'">Voltar</button>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h2>Controle de Estoque Hospitalar</h2>
+
+    <input type="text" id="produto" placeholder="Nome do Produto">
+    <input type="number" id="quantidade" placeholder="Quantidade">
+    <button onclick="adicionarProduto()">Adicionar</button>
+
+    <ul id="lista"></ul>
+  </div>
+</div>
+
+<script>
+function adicionarProduto() {
+  const produto = document.getElementById("produto").value;
+  const quantidade = document.getElementById("quantidade").value;
+
+  if (!produto || !quantidade) {
+    alert("Preencha todos os campos.");
+    return;
+  }
+
+  const li = document.createElement("li");
+  li.textContent = produto + " - Quantidade: " + quantidade;
+
+  document.getElementById("lista").appendChild(li);
+
+  document.getElementById("produto").value = "";
+  document.getElementById("quantidade").value = "";
+}
+</script>
+
+</body>
+</html>
