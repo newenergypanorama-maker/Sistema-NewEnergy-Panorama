@@ -2,59 +2,95 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Estoque Dinâmico - NewEnergy Panorama Health</title>
+<title>Gestão de Estoque - NewEnergy</title>
 <link rel="stylesheet" href="style.css">
+
+<style>
+.menu-interno{
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+}
+.menu-interno button{
+  flex:1;
+}
+.section{
+  display:none;
+}
+.section.active{
+  display:block;
+}
+.alerta{
+  background:#FEE2E2;
+  padding:10px;
+  border-radius:6px;
+  margin-bottom:10px;
+  color:#991B1B;
+}
+</style>
+
 </head>
 
 <body>
 
 <header>
   <img src="logo.png" class="logo">
-  <h1>Controle Avançado de Estoque</h1>
+  <h1>Gestão Profissional de Estoque</h1>
 </header>
 
 <div class="main">
 <div class="container">
 
-<h2>Cadastro de Produto</h2>
+<div class="menu-interno">
+  <button class="primary" onclick="mostrar('cadastro')">Cadastro Produto</button>
+  <button class="primary" onclick="mostrar('movimentacao')">Movimentação</button>
+  <button class="primary" onclick="mostrar('atual')">Estoque Atual</button>
+  <button class="primary" onclick="mostrar('minimo')">Estoque Mínimo</button>
+</div>
 
-<input type="text" id="partNumber" placeholder="Part Number">
-<input type="text" id="partName" placeholder="Part Name">
-<input type="number" id="quantity" placeholder="Quantidade">
-<input type="text" id="client" placeholder="Cliente">
-<select id="type">
-  <option value="entrada">Entrada</option>
-  <option value="saida">Saída</option>
+<!-- CADASTRO PRODUTO -->
+<div id="cadastro" class="section active">
+<h2>Cadastrar Produto</h2>
+<input type="text" id="pn" placeholder="Part Number">
+<input type="text" id="name" placeholder="Part Name">
+<input type="number" id="min" placeholder="Estoque Mínimo">
+<button class="primary" onclick="cadastrarProduto()">Salvar Produto</button>
+</div>
+
+<!-- MOVIMENTAÇÃO -->
+<div id="movimentacao" class="section">
+<h2>Entrada / Saída</h2>
+<input type="text" id="movPN" placeholder="Part Number">
+<input type="number" id="movQtd" placeholder="Quantidade">
+<input type="text" id="cliente" placeholder="Cliente">
+<select id="tipo">
+<option value="entrada">Entrada</option>
+<option value="saida">Saída</option>
 </select>
+<button class="primary" onclick="registrarMov()">Registrar</button>
+</div>
 
-<button class="primary" onclick="registrarMovimentacao()">Registrar Movimentação</button>
-
-<hr style="margin:30px 0">
-
-<h2>Filtros</h2>
-
-<input type="text" id="filtroPN" placeholder="Filtrar por Part Number">
-<input type="text" id="filtroCliente" placeholder="Filtrar por Cliente">
-<button class="primary" onclick="carregarMovimentacoes()">Aplicar Filtros</button>
-
-<hr style="margin:30px 0">
-
-<h2>Histórico de Movimentações</h2>
-
-<table id="tabela">
+<!-- ESTOQUE ATUAL -->
+<div id="atual" class="section">
+<h2>Estoque Atual</h2>
+<table id="tabelaAtual">
 <thead>
 <tr>
-<th>Data/Hora</th>
 <th>Part Number</th>
 <th>Part Name</th>
-<th>Tipo</th>
-<th>Quantidade</th>
-<th>Cliente</th>
-<th>Saldo Atual</th>
+<th>Saldo</th>
 </tr>
 </thead>
 <tbody></tbody>
 </table>
+</div>
+
+<!-- ESTOQUE MÍNIMO -->
+<div id="minimo" class="section">
+<h2>Produtos Abaixo do Mínimo</h2>
+<div id="alertas"></div>
+</div>
 
 <button class="primary" onclick="window.location.href='painel.html'">
 Voltar ao Painel
@@ -82,92 +118,117 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-onAuthStateChanged(auth, user => {
-  if (!user) window.location.href = "login.html";
+onAuthStateChanged(auth, user=>{
+ if(!user) window.location.href="login.html";
 });
 
-window.registrarMovimentacao = async function() {
-
-  const pn = document.getElementById("partNumber").value;
-  const name = document.getElementById("partName").value;
-  const qty = parseInt(document.getElementById("quantity").value);
-  const client = document.getElementById("client").value;
-  const type = document.getElementById("type").value;
-
-  if(!pn || !name || !qty){
-    alert("Preencha todos os campos obrigatórios.");
-    return;
-  }
-
-  let saldoAtual = 0;
-
-  const snapshot = await getDocs(collection(db, "movimentacoes"));
-
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    if(data.partNumber === pn){
-      if(data.type === "entrada") saldoAtual += data.quantity;
-      if(data.type === "saida") saldoAtual -= data.quantity;
-    }
-  });
-
-  if(type === "saida" && qty > saldoAtual){
-    alert("Estoque insuficiente!");
-    return;
-  }
-
-  const novoSaldo = type === "entrada" ? saldoAtual + qty : saldoAtual - qty;
-
-  await addDoc(collection(db, "movimentacoes"), {
-    partNumber: pn,
-    partName: name,
-    quantity: qty,
-    client: client,
-    type: type,
-    saldo: novoSaldo,
-    createdAt: serverTimestamp()
-  });
-
-  alert("Movimentação registrada com sucesso!");
-  carregarMovimentacoes();
+window.mostrar = function(sec){
+ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+ document.getElementById(sec).classList.add('active');
+ if(sec==="atual") carregarEstoque();
+ if(sec==="minimo") verificarMinimo();
 }
 
-window.carregarMovimentacoes = async function(){
+window.cadastrarProduto = async function(){
+ const pn=document.getElementById("pn").value;
+ const name=document.getElementById("name").value;
+ const min=parseInt(document.getElementById("min").value);
 
-  const filtroPN = document.getElementById("filtroPN").value;
-  const filtroCliente = document.getElementById("filtroCliente").value;
+ if(!pn||!name||!min){ alert("Preencha todos os campos"); return; }
 
-  const tabela = document.querySelector("#tabela tbody");
-  tabela.innerHTML = "";
+ await addDoc(collection(db,"produtos"),{
+  partNumber:pn,
+  partName:name,
+  estoqueMinimo:min,
+  createdAt:serverTimestamp()
+ });
 
-  const q = query(collection(db, "movimentacoes"), orderBy("createdAt", "desc"));
-  const snapshot = await getDocs(q);
-
-  snapshot.forEach(doc => {
-
-    const data = doc.data();
-
-    if(filtroPN && !data.partNumber.includes(filtroPN)) return;
-    if(filtroCliente && !data.client.includes(filtroCliente)) return;
-
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${data.createdAt?.toDate().toLocaleString() || ""}</td>
-      <td>${data.partNumber}</td>
-      <td>${data.partName}</td>
-      <td>${data.type}</td>
-      <td>${data.quantity}</td>
-      <td>${data.client}</td>
-      <td>${data.saldo}</td>
-    `;
-
-    tabela.appendChild(tr);
-  });
-
+ alert("Produto cadastrado!");
 }
 
-carregarMovimentacoes();
+window.registrarMov = async function(){
+ const pn=document.getElementById("movPN").value;
+ const qtd=parseInt(document.getElementById("movQtd").value);
+ const cliente=document.getElementById("cliente").value;
+ const tipo=document.getElementById("tipo").value;
+
+ let saldo=0;
+
+ const snap=await getDocs(collection(db,"movimentacoes"));
+ snap.forEach(doc=>{
+  const d=doc.data();
+  if(d.partNumber===pn){
+   if(d.tipo==="entrada") saldo+=d.quantidade;
+   if(d.tipo==="saida") saldo-=d.quantidade;
+  }
+ });
+
+ if(tipo==="saida" && qtd>saldo){
+  alert("Saldo insuficiente");
+  return;
+ }
+
+ const novoSaldo = tipo==="entrada"? saldo+qtd: saldo-qtd;
+
+ await addDoc(collection(db,"movimentacoes"),{
+  partNumber:pn,
+  quantidade:qtd,
+  cliente:cliente,
+  tipo:tipo,
+  saldo:novoSaldo,
+  createdAt:serverTimestamp()
+ });
+
+ alert("Movimentação registrada");
+}
+
+async function carregarEstoque(){
+ const tabela=document.querySelector("#tabelaAtual tbody");
+ tabela.innerHTML="";
+ const snap=await getDocs(collection(db,"movimentacoes"));
+
+ const mapa={};
+
+ snap.forEach(doc=>{
+  const d=doc.data();
+  if(!mapa[d.partNumber]) mapa[d.partNumber]=0;
+  if(d.tipo==="entrada") mapa[d.partNumber]+=d.quantidade;
+  if(d.tipo==="saida") mapa[d.partNumber]-=d.quantidade;
+ });
+
+ for(const pn in mapa){
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td>${pn}</td><td>-</td><td>${mapa[pn]}</td>`;
+  tabela.appendChild(tr);
+ }
+}
+
+async function verificarMinimo(){
+ const div=document.getElementById("alertas");
+ div.innerHTML="";
+ const produtos=await getDocs(collection(db,"produtos"));
+ const mov=await getDocs(collection(db,"movimentacoes"));
+
+ const saldo={};
+
+ mov.forEach(doc=>{
+  const d=doc.data();
+  if(!saldo[d.partNumber]) saldo[d.partNumber]=0;
+  if(d.tipo==="entrada") saldo[d.partNumber]+=d.quantidade;
+  if(d.tipo==="saida") saldo[d.partNumber]-=d.quantidade;
+ });
+
+ produtos.forEach(doc=>{
+  const p=doc.data();
+  const atual=saldo[p.partNumber]||0;
+  if(atual<=p.estoqueMinimo){
+   const alerta=document.createElement("div");
+   alerta.className="alerta";
+   alerta.innerHTML=`${p.partName} (${p.partNumber}) está abaixo do mínimo. Saldo: ${atual}`;
+   div.appendChild(alerta);
+  }
+ });
+}
 
 </script>
 
