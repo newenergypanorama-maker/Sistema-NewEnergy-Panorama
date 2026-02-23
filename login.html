@@ -2,21 +2,22 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>NewEnergy - Panorama Health</title>
+<title>Login - NewEnergy Panorama Health</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div class="container">
-  <img src="logo.png" class="logo">
-  <h2>Entrar no Sistema</h2>
+<div class="main">
+  <div class="container">
+    <h2>Entrar no Sistema</h2>
 
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="senha" placeholder="Senha">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="senha" placeholder="Senha">
 
-  <button class="primary" onclick="login()">Entrar</button>
-  <button class="google" onclick="loginGoogle()">Entrar com Google</button>
+    <button class="primary" onclick="login()">Entrar</button>
+    <button class="google" onclick="loginGoogle()">Entrar com Google</button>
+  </div>
 </div>
 
 <script type="module">
@@ -35,10 +36,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    window.location.href = "painel.html";
-  }
+onAuthStateChanged(auth, user => {
+  if (user) window.location.href = "painel.html";
 });
 
 window.login = function() {
@@ -46,23 +45,15 @@ window.login = function() {
   const senha = document.getElementById("senha").value;
 
   signInWithEmailAndPassword(auth, email, senha)
-    .then(() => {
-      window.location.href = "painel.html";
-    })
-    .catch((error) => {
-      alert("Erro no login: " + error.message);
-    });
+    .then(() => window.location.href = "painel.html")
+    .catch(error => alert("Erro: " + error.message));
 };
 
 window.loginGoogle = function() {
   const provider = new GoogleAuthProvider();
   signInWithPopup(auth, provider)
-    .then(() => {
-      window.location.href = "painel.html";
-    })
-    .catch((error) => {
-      alert("Erro no login Google: " + error.message);
-    });
+    .then(() => window.location.href = "painel.html")
+    .catch(error => alert("Erro Google: " + error.message));
 };
 </script>
 
