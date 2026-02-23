@@ -2,78 +2,96 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Gestão de Estoque - NewEnergy</title>
+<title>Gestão Profissional de Estoque</title>
 <link rel="stylesheet" href="style.css">
 
 <style>
-.menu-interno{
+/* MENU ABAS PROFISSIONAL */
+.tabs{
   display:flex;
-  gap:10px;
+  border-bottom:2px solid #E5E7EB;
   margin-bottom:20px;
-  flex-wrap:wrap;
 }
-.menu-interno button{
-  flex:1;
+.tabs button{
+  background:none;
+  border:none;
+  padding:14px 20px;
+  cursor:pointer;
+  font-weight:600;
+  border-bottom:3px solid transparent;
 }
-.section{
-  display:none;
+.tabs button.active{
+  border-bottom:3px solid #2563EB;
+  color:#2563EB;
 }
-.section.active{
-  display:block;
-}
+.section{ display:none; }
+.section.active{ display:block; }
+
 .alerta{
   background:#FEE2E2;
   padding:10px;
-  border-radius:6px;
   margin-bottom:10px;
+  border-radius:6px;
   color:#991B1B;
 }
 </style>
-
 </head>
 
 <body>
 
 <header>
   <img src="logo.png" class="logo">
-  <h1>Gestão Profissional de Estoque</h1>
+  <h1>Gestão Avançada de Estoque</h1>
 </header>
 
 <div class="main">
-<div class="container">
+<div class="container" style="max-width:1000px">
 
-<div class="menu-interno">
-  <button class="primary" onclick="mostrar('cadastro')">Cadastro Produto</button>
-  <button class="primary" onclick="mostrar('movimentacao')">Movimentação</button>
-  <button class="primary" onclick="mostrar('atual')">Estoque Atual</button>
-  <button class="primary" onclick="mostrar('minimo')">Estoque Mínimo</button>
+<div class="tabs">
+  <button onclick="mostrar('cadastro',this)" class="active">Cadastro Produto</button>
+  <button onclick="mostrar('mov',this)">Movimentação</button>
+  <button onclick="mostrar('atual',this)">Estoque Atual</button>
+  <button onclick="mostrar('minimo',this)">Estoque Mínimo</button>
 </div>
 
-<!-- CADASTRO PRODUTO -->
+<!-- CADASTRO -->
 <div id="cadastro" class="section active">
-<h2>Cadastrar Produto</h2>
+<h2>Novo Produto</h2>
+
 <input type="text" id="pn" placeholder="Part Number">
 <input type="text" id="name" placeholder="Part Name">
+<input type="text" id="fabricante" placeholder="Fabricante">
+<input type="text" id="sn" placeholder="Serial Number (SN)">
 <input type="number" id="min" placeholder="Estoque Mínimo">
-<button class="primary" onclick="cadastrarProduto()">Salvar Produto</button>
+
+<button class="primary" onclick="cadastrarProduto()">Cadastrar Produto</button>
 </div>
 
 <!-- MOVIMENTAÇÃO -->
-<div id="movimentacao" class="section">
-<h2>Entrada / Saída</h2>
-<input type="text" id="movPN" placeholder="Part Number">
+<div id="mov" class="section">
+<h2>Movimentação</h2>
+
+<input list="listaProdutos" id="movPN" placeholder="Part Number">
+<datalist id="listaProdutos"></datalist>
+
+<input type="text" id="movName" placeholder="Part Name (auto)">
 <input type="number" id="movQtd" placeholder="Quantidade">
+<input type="text" id="origem" placeholder="Origem">
+<input type="text" id="destino" placeholder="Destino">
 <input type="text" id="cliente" placeholder="Cliente">
+<input type="text" id="os" placeholder="Ordem de Serviço (OS)">
+
 <select id="tipo">
 <option value="entrada">Entrada</option>
 <option value="saida">Saída</option>
 </select>
-<button class="primary" onclick="registrarMov()">Registrar</button>
+
+<button class="primary" onclick="registrarMov()">Registrar Movimentação</button>
 </div>
 
 <!-- ESTOQUE ATUAL -->
 <div id="atual" class="section">
-<h2>Estoque Atual</h2>
+<h2>Estoque Atual Consolidado</h2>
 <table id="tabelaAtual">
 <thead>
 <tr>
@@ -86,7 +104,7 @@
 </table>
 </div>
 
-<!-- ESTOQUE MÍNIMO -->
+<!-- ESTOQUE MINIMO -->
 <div id="minimo" class="section">
 <h2>Produtos Abaixo do Mínimo</h2>
 <div id="alertas"></div>
@@ -122,87 +140,112 @@ onAuthStateChanged(auth, user=>{
  if(!user) window.location.href="login.html";
 });
 
-window.mostrar = function(sec){
+/* TABS */
+window.mostrar = function(sec,btn){
  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+ document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
  document.getElementById(sec).classList.add('active');
+ btn.classList.add('active');
  if(sec==="atual") carregarEstoque();
  if(sec==="minimo") verificarMinimo();
 }
 
-window.cadastrarProduto = async function(){
- const pn=document.getElementById("pn").value;
- const name=document.getElementById("name").value;
- const min=parseInt(document.getElementById("min").value);
+/* CARREGAR PRODUTOS PARA AUTOCOMPLETE */
+async function carregarProdutos(){
+ const snap=await getDocs(collection(db,"produtos"));
+ const lista=document.getElementById("listaProdutos");
+ lista.innerHTML="";
+ snap.forEach(doc=>{
+  const p=doc.data();
+  const option=document.createElement("option");
+  option.value=p.partNumber;
+  lista.appendChild(option);
+ });
+}
+carregarProdutos();
 
- if(!pn||!name||!min){ alert("Preencha todos os campos"); return; }
+/* AUTO PREENCHER PART NAME */
+document.getElementById("movPN").addEventListener("change",async e=>{
+ const pn=e.target.value;
+ const snap=await getDocs(collection(db,"produtos"));
+ snap.forEach(doc=>{
+  const p=doc.data();
+  if(p.partNumber===pn){
+   document.getElementById("movName").value=p.partName;
+  }
+ });
+});
 
+/* CADASTRAR PRODUTO */
+window.cadastrarProduto=async function(){
  await addDoc(collection(db,"produtos"),{
-  partNumber:pn,
-  partName:name,
-  estoqueMinimo:min,
+  partNumber:pn.value,
+  partName:name.value,
+  fabricante:fabricante.value,
+  serialNumber:sn.value,
+  estoqueMinimo:parseInt(min.value),
   createdAt:serverTimestamp()
  });
-
  alert("Produto cadastrado!");
+ carregarProdutos();
 }
 
-window.registrarMov = async function(){
- const pn=document.getElementById("movPN").value;
- const qtd=parseInt(document.getElementById("movQtd").value);
- const cliente=document.getElementById("cliente").value;
- const tipo=document.getElementById("tipo").value;
+/* REGISTRAR MOVIMENTAÇÃO */
+window.registrarMov=async function(){
 
  let saldo=0;
-
- const snap=await getDocs(collection(db,"movimentacoes"));
- snap.forEach(doc=>{
+ const movSnap=await getDocs(collection(db,"movimentacoes"));
+ movSnap.forEach(doc=>{
   const d=doc.data();
-  if(d.partNumber===pn){
+  if(d.partNumber===movPN.value){
    if(d.tipo==="entrada") saldo+=d.quantidade;
    if(d.tipo==="saida") saldo-=d.quantidade;
   }
  });
 
- if(tipo==="saida" && qtd>saldo){
-  alert("Saldo insuficiente");
+ if(tipo.value==="saida" && movQtd.value>saldo){
+  alert("Saldo insuficiente!");
   return;
  }
 
- const novoSaldo = tipo==="entrada"? saldo+qtd: saldo-qtd;
+ const novoSaldo = tipo.value==="entrada" ? saldo+parseInt(movQtd.value) : saldo-parseInt(movQtd.value);
 
  await addDoc(collection(db,"movimentacoes"),{
-  partNumber:pn,
-  quantidade:qtd,
-  cliente:cliente,
-  tipo:tipo,
+  partNumber:movPN.value,
+  partName:movName.value,
+  quantidade:parseInt(movQtd.value),
+  origem:origem.value,
+  destino:destino.value,
+  cliente:cliente.value,
+  OS:os.value,
+  tipo:tipo.value,
   saldo:novoSaldo,
   createdAt:serverTimestamp()
  });
 
- alert("Movimentação registrada");
+ alert("Movimentação registrada!");
 }
 
+/* ESTOQUE ATUAL */
 async function carregarEstoque(){
  const tabela=document.querySelector("#tabelaAtual tbody");
  tabela.innerHTML="";
  const snap=await getDocs(collection(db,"movimentacoes"));
-
  const mapa={};
-
  snap.forEach(doc=>{
   const d=doc.data();
-  if(!mapa[d.partNumber]) mapa[d.partNumber]=0;
-  if(d.tipo==="entrada") mapa[d.partNumber]+=d.quantidade;
-  if(d.tipo==="saida") mapa[d.partNumber]-=d.quantidade;
+  if(!mapa[d.partNumber]) mapa[d.partNumber]={name:d.partName,saldo:0};
+  if(d.tipo==="entrada") mapa[d.partNumber].saldo+=d.quantidade;
+  if(d.tipo==="saida") mapa[d.partNumber].saldo-=d.quantidade;
  });
-
  for(const pn in mapa){
   const tr=document.createElement("tr");
-  tr.innerHTML=`<td>${pn}</td><td>-</td><td>${mapa[pn]}</td>`;
+  tr.innerHTML=`<td>${pn}</td><td>${mapa[pn].name}</td><td>${mapa[pn].saldo}</td>`;
   tabela.appendChild(tr);
  }
 }
 
+/* ESTOQUE MINIMO */
 async function verificarMinimo(){
  const div=document.getElementById("alertas");
  div.innerHTML="";
@@ -224,7 +267,7 @@ async function verificarMinimo(){
   if(atual<=p.estoqueMinimo){
    const alerta=document.createElement("div");
    alerta.className="alerta";
-   alerta.innerHTML=`${p.partName} (${p.partNumber}) está abaixo do mínimo. Saldo: ${atual}`;
+   alerta.innerHTML=`${p.partName} (${p.partNumber}) abaixo do mínimo. Saldo: ${atual}`;
    div.appendChild(alerta);
   }
  });
