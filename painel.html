@@ -1,17 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Painel - NewEnergy Panorama Health</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
 <header>
-  <div class="logo">
-    <img src="logo.png">
-    <h1>NewEnergy - Panorama Health</h1>
-  </div>
-  <button onclick="logout()">Sair</button>
+  <img src="logo.png" class="logo">
+  <h1>NewEnergy - Panorama Health</h1>
 </header>
 
 <div class="container">
-  <div class="card">
-    <h2>Painel Administrativo</h2>
-    <p>Bem-vindo ao sistema de controle hospitalar.</p>
-    <button onclick="window.location.href='estoque.html'">
-      Acessar Controle de Estoque
-    </button>
-  </div>
+  <h2>Bem-vindo ao Painel</h2>
+
+  <button class="primary" onclick="window.location.href='estoque.html'">
+    Acessar Estoque
+  </button>
+  <button class="primary" onclick="logout()">Sair</button>
 </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
+  authDomain: "sistema-newenergy-panora-24697.firebaseapp.com",
+  projectId: "sistema-newenergy-panora-24697",
+  storageBucket: "sistema-newenergy-panora-24697.firebasestorage.app",
+  messagingSenderId: "503251309234",
+  appId: "1:503251309234:web:8f4d905e5e4b1f496befab"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, user => {
+  if (!user) window.location.href = "login.html";
+});
+
+window.logout = function() {
+  signOut(auth).then(() => {
+    window.location.href = "login.html";
+  });
+};
+</script>
+
+</body>
+</html>
