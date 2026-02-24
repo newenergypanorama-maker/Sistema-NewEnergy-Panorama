@@ -3,52 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acesso | Panorama</title>
+    <title>Acesso | Panorama Health</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;">
+<body class="auth-container">
 
-<div class="login-box">
-    <img src="logo.png" class="logo-login" alt="Panorama Health">
-    <h2 style="color: var(--primary); margin-bottom: 1.5rem;">Acesso ao Sistema</h2>
+<div class="card">
+    <img src="logo.png" class="logo-img" alt="Panorama Health">
+    <h2 style="margin-bottom: 0.5rem;">Acesso ao Sistema</h2>
+    <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem;">Entre com suas credenciais</p>
     
-    <input type="email" id="email" placeholder="E-mail corporativo" style="margin-bottom: 10px;">
-    <input type="password" id="senha" placeholder="Senha" style="margin-bottom: 20px;">
+    <div class="input-group">
+        <label>E-mail Corporativo</label>
+        <input type="email" id="email" placeholder="exemplo@panorama.com">
+    </div>
     
-    <button class="btn-primary" onclick="login()">ENTRAR</button>
-    <button onclick="loginGoogle()" style="margin-top:10px; background:white; border:1px solid #ddd; padding:10px; width:100%; border-radius:10px; cursor:pointer;">
-        Entrar com Google
+    <div class="input-group" style="margin-top: 1rem;">
+        <label>Senha</label>
+        <input type="password" id="senha" placeholder="••••••••">
+    </div>
+    
+    <button class="btn btn-primary" style="margin-top: 2rem;" onclick="login()">ENTRAR</button>
+    
+    <div style="margin: 1.5rem 0; display: flex; align-items: center; gap: 10px; color: var(--border);">
+        <hr style="flex:1"> <span style="font-size: 12px;">OU</span> <hr style="flex:1">
+    </div>
+
+    <button onclick="loginGoogle()" style="width:100%; background:white; border:1px solid var(--border); padding:10px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:600;">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Google
     </button>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
-    authDomain: "sistema-newenergy-panora-24697.firebaseapp.com",
-    projectId: "sistema-newenergy-panora-24697",
-    storageBucket: "sistema-newenergy-panora-24697.firebasestorage.app",
-    messagingSenderId: "503251309234",
-    appId: "1:503251309234:web:8f4d905e5e4b1f496befab"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
+        authDomain: "sistema-newenergy-panora-24697.firebaseapp.com",
+        projectId: "sistema-newenergy-panora-24697",
+        storageBucket: "sistema-newenergy-panora-24697.firebasestorage.app",
+        messagingSenderId: "503251309234",
+        appId: "1:503251309234:web:8f4d905e5e4b1f496befab"
+    };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-window.login = () => {
-    const email = document.getElementById("email").value;
-    const senha = document.getElementById("senha").value;
-    signInWithEmailAndPassword(auth, email, senha)
-        .then(() => window.location.href = "painel.html")
-        .catch(err => alert("Erro: " + err.message));
-};
+    window.login = () => {
+        const email = document.getElementById("email").value;
+        const senha = document.getElementById("senha").value;
+        signInWithEmailAndPassword(auth, email, senha)
+            .then(() => window.location.href = "painel.html")
+            .catch(err => alert("Erro ao entrar: Verifique e-mail e senha."));
+    };
 
-window.loginGoogle = () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider).then(() => window.location.href = "painel.html");
-};
+    window.loginGoogle = () => {
+        const provider = new GoogleAuthProvider();
+        signInWithPopup(auth, provider).then(() => window.location.href = "painel.html");
+    };
 </script>
 </body>
 </html>
