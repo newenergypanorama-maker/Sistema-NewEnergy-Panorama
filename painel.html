@@ -6,16 +6,19 @@
     <link rel="stylesheet" href="style.css">
     <title>Painel - Panorama Health</title>
 </head>
-<body>
-    <div class="logo-box">
+<body class="auth-container">
+    <div class="card" style="max-width: 500px;">
         <img src="logo.png" class="logo-img">
-        <h2 style="margin-bottom: 20px;">Painel de Controle</h2>
-        
-        <div id="uInfo" style="font-size: 14px; margin-bottom: 20px; color: #64748B;">Carregando...</div>
+        <h2 style="margin-bottom: 5px;">Painel de Controle</h2>
+        <div id="uInfo" style="font-size: 14px; margin-bottom: 2rem; color: var(--text-muted);">Identificando usuário...</div>
 
-        <div style="display: grid; gap: 10px;">
-            <button class="btn" onclick="window.location.href='estoque.html'">CONTROLE DE ESTOQUE</button>
-            <button class="btn" style="background: #64748B;" onclick="logout()">SAIR DO SISTEMA</button>
+        <div style="display: grid; gap: 12px;">
+            <button class="btn btn-primary" onclick="window.location.href='estoque.html'">
+                📦 CONTROLE DE ESTOQUE
+            </button>
+            <button class="btn" style="background: #f1f5f9; color: var(--text-main);" onclick="logout()">
+                SAIR DO SISTEMA
+            </button>
         </div>
     </div>
 
@@ -35,7 +38,7 @@
         const auth = getAuth(app);
 
         onAuthStateChanged(auth, user => {
-            if (user) document.getElementById('uInfo').innerText = "Usuário: " + user.email;
+            if (user) document.getElementById('uInfo').innerText = user.email;
             else window.location.href = "login.html";
         });
 
