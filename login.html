@@ -1,28 +1,24 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Acceso | Panorama Health</title>
+    <title>Login | Panorama Health</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+<body>
+<div class="main">
+    <div class="container" style="max-width: 400px;">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <img src="logo.png" class="logo" onerror="this.style.display='none'">
+            <h2 style="margin-top:10px">Acesso Restrito</h2>
+        </div>
 
-<div class="container" style="max-width: 400px;">
-    <div style="text-align: center; margin-bottom: 2rem;">
-        <img src="logo.png" class="logo">
-        <p style="color: #64748B; font-size: 0.85rem; margin-top: 10px;">Portal de Gestión Hospitalaria</p>
+        <input type="email" id="email" placeholder="E-mail corporativo">
+        <input type="password" id="senha" placeholder="Senha">
+
+        <button class="primary" onclick="login()">Entrar no Sistema</button>
+        <button class="google" onclick="loginGoogle()">Entrar com Google</button>
     </div>
-
-    <h2>Iniciar Sesión</h2>
-
-    <input type="email" id="email" placeholder="Correo electrónico">
-    <input type="password" id="senha" placeholder="Contraseña">
-
-    <button class="primary" onclick="login()">Entrar al Sistema</button>
-    <button class="google" onclick="loginGoogle()">
-        <img src="https://www.google.com/favicon.ico" style="width:16px; vertical-align:middle; margin-right:8px;">
-        Acceder con Google
-    </button>
 </div>
 
 <script type="module">
@@ -30,12 +26,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
-  authDomain: "sistema-newenergy-panora-24697.firebaseapp.com",
-  projectId: "sistema-newenergy-panora-24697",
-  storageBucket: "sistema-newenergy-panora-24697.firebasestorage.app",
-  messagingSenderId: "503251309234",
-  appId: "1:503251309234:web:8f4d905e5e4b1f496befab"
+    apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
+    authDomain: "sistema-newenergy-panora-24697.firebaseapp.com",
+    projectId: "sistema-newenergy-panora-24697",
+    storageBucket: "sistema-newenergy-panora-24697.firebasestorage.app",
+    messagingSenderId: "503251309234",
+    appId: "1:503251309234:web:8f4d905e5e4b1f496befab"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -43,15 +39,15 @@ const auth = getAuth(app);
 
 onAuthStateChanged(auth, user => { if (user) window.location.href = "painel.html"; });
 
-window.login = function() {
-  const email = document.getElementById("email").value;
-  const senha = document.getElementById("senha").value;
-  signInWithEmailAndPassword(auth, email, senha).catch(err => alert("Error: " + err.message));
+window.login = () => {
+    const email = document.getElementById("email").value;
+    const senha = document.getElementById("senha").value;
+    signInWithEmailAndPassword(auth, email, senha).catch(err => alert("Erro: " + err.message));
 };
 
-window.loginGoogle = function() {
-  const provider = new GoogleAuthProvider();
-  signInWithPopup(auth, provider).catch(err => alert("Error: " + err.message));
+window.loginGoogle = () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider).catch(err => alert("Erro: " + err.message));
 };
 </script>
 </body>
