@@ -3,10 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <title>Gestão Profissional de Estoque</title>
-<link rel="stylesheet" href="style.css">
 
 <style>
-/* MENU ABAS PROFISSIONAL */
+body{
+  font-family: Arial;
+  background:#F3F4F6;
+  margin:0;
+}
+header{
+  background:#1E3A8A;
+  color:white;
+  padding:15px;
+  text-align:center;
+}
+.container{
+  max-width:1100px;
+  margin:30px auto;
+  background:white;
+  padding:25px;
+  border-radius:8px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
 .tabs{
   display:flex;
   border-bottom:2px solid #E5E7EB;
@@ -27,6 +44,33 @@
 .section{ display:none; }
 .section.active{ display:block; }
 
+input, select{
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  border:1px solid #D1D5DB;
+  border-radius:6px;
+}
+button.primary{
+  background:#2563EB;
+  color:white;
+  padding:10px 15px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+th, td{
+  border:1px solid #E5E7EB;
+  padding:8px;
+  text-align:left;
+}
+th{
+  background:#F9FAFB;
+}
 .alerta{
   background:#FEE2E2;
   padding:10px;
@@ -40,12 +84,10 @@
 <body>
 
 <header>
-  <img src="logo.png" class="logo">
-  <h1>Gestão Avançada de Estoque</h1>
+<h1>Sistema Profissional de Estoque</h1>
 </header>
 
-<div class="main">
-<div class="container" style="max-width:1000px">
+<div class="container">
 
 <div class="tabs">
   <button onclick="mostrar('cadastro',this)" class="active">Cadastro Produto</button>
@@ -74,7 +116,7 @@
 <input list="listaProdutos" id="movPN" placeholder="Part Number">
 <datalist id="listaProdutos"></datalist>
 
-<input type="text" id="movName" placeholder="Part Name (auto)">
+<input type="text" id="movName" placeholder="Part Name (automático)">
 <input type="number" id="movQtd" placeholder="Quantidade">
 <input type="text" id="origem" placeholder="Origem">
 <input type="text" id="destino" placeholder="Destino">
@@ -92,7 +134,7 @@
 <!-- ESTOQUE ATUAL -->
 <div id="atual" class="section">
 <h2>Estoque Atual Consolidado</h2>
-<table id="tabelaAtual">
+<table>
 <thead>
 <tr>
 <th>Part Number</th>
@@ -100,7 +142,7 @@
 <th>Saldo</th>
 </tr>
 </thead>
-<tbody></tbody>
+<tbody id="tabelaAtual"></tbody>
 </table>
 </div>
 
@@ -110,35 +152,21 @@
 <div id="alertas"></div>
 </div>
 
-<button class="primary" onclick="window.location.href='painel.html'">
-Voltar ao Painel
-</button>
-
-</div>
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
-  authDomain: "sistema-newenergy-panora-24697.firebaseapp.com",
-  projectId: "sistema-newenergy-panora-24697",
-  storageBucket: "sistema-newenergy-panora-24697.firebasestorage.app",
-  messagingSenderId: "503251309234",
-  appId: "1:503251309234:web:8f4d905e5e4b1f496befab"
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_AUTH_DOMAIN",
+  projectId: "SEU_PROJECT_ID",
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
-
-onAuthStateChanged(auth, user=>{
- if(!user) window.location.href="login.html";
-});
 
 /* TABS */
 window.mostrar = function(sec,btn){
@@ -150,10 +178,44 @@ window.mostrar = function(sec,btn){
  if(sec==="minimo") verificarMinimo();
 }
 
-/* CARREGAR PRODUTOS PARA AUTOCOMPLETE */
+/* CADASTRAR PRODUTO */
+window.cadastrarProduto = async function(){
+
+ const partNumber = document.getElementById("pn").value;
+ const partName = document.getElementById("name").value;
+ const fabricante = document.getElementById("fabricante").value;
+ const serialNumber = document.getElementById("sn").value;
+ const estoqueMinimo = parseInt(document.getElementById("min").value) || 0;
+
+ if(!partNumber || !partName){
+   alert("Preencha Part Number e Part Name!");
+   return;
+ }
+
+ await addDoc(collection(db,"produtos"),{
+   partNumber,
+   partName,
+   fabricante,
+   serialNumber,
+   estoqueMinimo,
+   createdAt: serverTimestamp()
+ });
+
+ alert("Produto cadastrado com sucesso!");
+
+ document.getElementById("pn").value="";
+ document.getElementById("name").value="";
+ document.getElementById("fabricante").value="";
+ document.getElementById("sn").value="";
+ document.getElementById("min").value="";
+
+ carregarProdutos();
+}
+
+/* CARREGAR PRODUTOS */
 async function carregarProdutos(){
- const snap=await getDocs(collection(db,"produtos"));
- const lista=document.getElementById("listaProdutos");
+ const snap = await getDocs(collection(db,"produtos"));
+ const lista = document.getElementById("listaProdutos");
  lista.innerHTML="";
  snap.forEach(doc=>{
   const p=doc.data();
@@ -164,7 +226,7 @@ async function carregarProdutos(){
 }
 carregarProdutos();
 
-/* AUTO PREENCHER PART NAME */
+/* AUTO PREENCHER */
 document.getElementById("movPN").addEventListener("change",async e=>{
  const pn=e.target.value;
  const snap=await getDocs(collection(db,"produtos"));
@@ -176,50 +238,43 @@ document.getElementById("movPN").addEventListener("change",async e=>{
  });
 });
 
-/* CADASTRAR PRODUTO */
-window.cadastrarProduto=async function(){
- await addDoc(collection(db,"produtos"),{
-  partNumber:pn.value,
-  partName:name.value,
-  fabricante:fabricante.value,
-  serialNumber:sn.value,
-  estoqueMinimo:parseInt(min.value),
-  createdAt:serverTimestamp()
- });
- alert("Produto cadastrado!");
- carregarProdutos();
-}
+/* MOVIMENTAÇÃO */
+window.registrarMov = async function(){
 
-/* REGISTRAR MOVIMENTAÇÃO */
-window.registrarMov=async function(){
+ const pn = document.getElementById("movPN").value;
+ const nome = document.getElementById("movName").value;
+ const qtd = parseInt(document.getElementById("movQtd").value);
+ const tipo = document.getElementById("tipo").value;
+
+ if(!pn || !qtd){
+   alert("Preencha Part Number e Quantidade");
+   return;
+ }
 
  let saldo=0;
- const movSnap=await getDocs(collection(db,"movimentacoes"));
- movSnap.forEach(doc=>{
+ const snap=await getDocs(collection(db,"movimentacoes"));
+ snap.forEach(doc=>{
   const d=doc.data();
-  if(d.partNumber===movPN.value){
+  if(d.partNumber===pn){
    if(d.tipo==="entrada") saldo+=d.quantidade;
    if(d.tipo==="saida") saldo-=d.quantidade;
   }
  });
 
- if(tipo.value==="saida" && movQtd.value>saldo){
+ if(tipo==="saida" && qtd>saldo){
   alert("Saldo insuficiente!");
   return;
  }
 
- const novoSaldo = tipo.value==="entrada" ? saldo+parseInt(movQtd.value) : saldo-parseInt(movQtd.value);
-
  await addDoc(collection(db,"movimentacoes"),{
-  partNumber:movPN.value,
-  partName:movName.value,
-  quantidade:parseInt(movQtd.value),
+  partNumber:pn,
+  partName:nome,
+  quantidade:qtd,
+  tipo,
   origem:origem.value,
   destino:destino.value,
   cliente:cliente.value,
   OS:os.value,
-  tipo:tipo.value,
-  saldo:novoSaldo,
   createdAt:serverTimestamp()
  });
 
@@ -228,7 +283,7 @@ window.registrarMov=async function(){
 
 /* ESTOQUE ATUAL */
 async function carregarEstoque(){
- const tabela=document.querySelector("#tabelaAtual tbody");
+ const tabela=document.getElementById("tabelaAtual");
  tabela.innerHTML="";
  const snap=await getDocs(collection(db,"movimentacoes"));
  const mapa={};
