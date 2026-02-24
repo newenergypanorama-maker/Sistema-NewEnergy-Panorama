@@ -1,35 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Painel - NewEnergy Panorama Health</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>Panel | Panorama Health</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
 <header>
-  <img src="logo.png" class="logo">
-  <h1>NewEnergy - Panorama Health</h1>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <img src="logo.png" class="logo">
+        <h1>NewEnergy - Panorama</h1>
+    </div>
+    <button onclick="logout()" style="width: auto; padding: 8px 16px; background: #F1F5F9; color: #475569; margin: 0;">Salir</button>
 </header>
 
 <div class="main">
-  <div class="container">
-    <h2>Painel Administrativo</h2>
+    <div class="container" style="max-width: 600px; text-align: center;">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;">🏥</div>
+        <h2>Gestión Administrativa</h2>
+        <p style="color: #64748B; margin-bottom: 2rem;">Bienvenido al centro de control operativo.</p>
 
-    <button class="primary" onclick="window.location.href='estoque.html'">
-      Controle de Estoque
-    </button>
-
-    <button class="primary" onclick="logout()">
-      Sair
-    </button>
-  </div>
+        <div style="display: grid; gap: 12px;">
+            <button class="primary" onclick="window.location.href='estoque.html'">📦 Control de Inventario</button>
+            <button class="google" disabled style="cursor: not-allowed; opacity: 0.6;">📋 Registro de Pacientes (Próximamente)</button>
+        </div>
+    </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
@@ -43,16 +44,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-onAuthStateChanged(auth, user => {
-  if (!user) window.location.href = "login.html";
-});
+onAuthStateChanged(auth, user => { if (!user) window.location.href = "login.html"; });
 
-window.logout = function() {
-  signOut(auth).then(() => {
-    window.location.href = "login.html";
-  });
-};
+window.logout = () => signOut(auth).then(() => window.location.href = "login.html");
 </script>
-
 </body>
 </html>
