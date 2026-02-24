@@ -1,23 +1,28 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Login - NewEnergy Panorama Health</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>Acceso | Panorama Health</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
 
-<body>
+<div class="container" style="max-width: 400px;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <img src="logo.png" class="logo">
+        <p style="color: #64748B; font-size: 0.85rem; margin-top: 10px;">Portal de Gestión Hospitalaria</p>
+    </div>
 
-<div class="main">
-  <div class="container">
-    <h2>Entrar no Sistema</h2>
+    <h2>Iniciar Sesión</h2>
 
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="senha" placeholder="Senha">
+    <input type="email" id="email" placeholder="Correo electrónico">
+    <input type="password" id="senha" placeholder="Contraseña">
 
-    <button class="primary" onclick="login()">Entrar</button>
-    <button class="google" onclick="loginGoogle()">Entrar com Google</button>
-  </div>
+    <button class="primary" onclick="login()">Entrar al Sistema</button>
+    <button class="google" onclick="loginGoogle()">
+        <img src="https://www.google.com/favicon.ico" style="width:16px; vertical-align:middle; margin-right:8px;">
+        Acceder con Google
+    </button>
 </div>
 
 <script type="module">
@@ -36,26 +41,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-onAuthStateChanged(auth, user => {
-  if (user) window.location.href = "painel.html";
-});
+onAuthStateChanged(auth, user => { if (user) window.location.href = "painel.html"; });
 
 window.login = function() {
   const email = document.getElementById("email").value;
   const senha = document.getElementById("senha").value;
-
-  signInWithEmailAndPassword(auth, email, senha)
-    .then(() => window.location.href = "painel.html")
-    .catch(error => alert("Erro: " + error.message));
+  signInWithEmailAndPassword(auth, email, senha).catch(err => alert("Error: " + err.message));
 };
 
 window.loginGoogle = function() {
   const provider = new GoogleAuthProvider();
-  signInWithPopup(auth, provider)
-    .then(() => window.location.href = "painel.html")
-    .catch(error => alert("Erro Google: " + error.message));
+  signInWithPopup(auth, provider).catch(err => alert("Error: " + err.message));
 };
 </script>
-
 </body>
 </html>
