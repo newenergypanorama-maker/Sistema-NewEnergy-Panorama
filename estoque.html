@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Estoque | Panorama Health</title>
+    <title>Estoque | Panorama</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header>
     <div class="logo-area"><h1>PANORAMA HEALTH</h1></div>
-    <div id="userInfo" style="font-size: 0.75rem; color: #64748B;">Carregando usuário...</div>
-    <button onclick="logout()" style="background:none; border:none; color:#EF4444; font-weight:700; cursor:pointer">SAIR</button>
+    <div id="userInfo" style="font-size: 0.75rem; color: #64748B;">Operador: ...</div>
+    <button onclick="window.location.href='painel.html'" style="background:none; border:none; color:var(--primary); font-weight:700; cursor:pointer">VOLTAR</button>
 </header>
 
 <div style="padding: 1rem; max-width: 1100px; margin: auto;">
@@ -20,37 +20,36 @@
         <button onclick="aba(event, 'mov')">MOVIMENTAÇÃO</button>
         <button onclick="aba(event, 'est')">ESTOQUE</button>
         <button onclick="aba(event, 'his')">HISTÓRICO</button>
-        <button onclick="aba(event, 'ale')">ALERTAS</button>
     </div>
 
     <div id="cad" class="section active">
         <div class="grid-form">
-            <div class="input-group"><label>Part Number</label><input type="text" id="pn"></div>
-            <div class="input-group"><label>Nome do Item</label><input type="text" id="name"></div>
-            <div class="input-group"><label>Nº de Série</label><input type="text" id="sn"></div>
-            <div class="input-group"><label>Estoque Mínimo</label><input type="number" id="min" value="5"></div>
+            <input type="text" id="pn" placeholder="Part Number (PN)">
+            <input type="text" id="name" placeholder="Nome do Item">
+            <input type="text" id="sn" placeholder="Nº de Série (Opcional)">
+            <input type="number" id="min" placeholder="Estoque Mínimo" value="5">
         </div>
-        <button class="btn-primary" onclick="cadastrar()">SALVAR PRODUTO</button>
+        <button class="btn-primary" onclick="cadastrar()">SALVAR ITEM</button>
     </div>
 
     <div id="mov" class="section">
         <div class="grid-form">
-            <div class="input-group">
-                <label>Item (PN)</label>
-                <input list="prodList" id="mPN" placeholder="Selecione...">
+            <div style="grid-column: span 1;">
+                <label style="font-size:0.7rem; font-weight:bold">BUSCAR ITEM (PN ou NOME)</label>
+                <input list="prodList" id="mBusca" onchange="autoPreencher(this.value)">
                 <datalist id="prodList"></datalist>
             </div>
-            <div class="input-group"><label>Quantidade</label><input type="number" id="mQtd"></div>
-            <div class="input-group"><label>Nº Série Unitário</label><input type="text" id="mSN"></div>
-            <div class="input-group">
-                <label>Tipo</label>
-                <select id="mTipo">
-                    <option value="entrada">ENTRADA (+)</option>
-                    <option value="saida">SAÍDA (-)</option>
-                </select>
+            <div>
+                <label style="font-size:0.7rem; font-weight:bold">QUANTIDADE</label>
+                <input type="number" id="mQtd">
             </div>
+            <input type="text" id="mSN" placeholder="Nº Série desta unidade">
+            <select id="mTipo">
+                <option value="entrada">ENTRADA (+)</option>
+                <option value="saida">SAÍDA (-)</option>
+            </select>
         </div>
-        <button class="btn-primary" onclick="movimentar()">REGISTRAR MOVIMENTAÇÃO</button>
+        <button class="btn-primary" onclick="movimentar()">REGISTRAR</button>
     </div>
 
     <div id="est" class="section">
@@ -63,20 +62,27 @@
     </div>
 
     <div id="his" class="section">
+        <div class="filtros-hist">
+            <input type="text" id="fPN" placeholder="Filtrar PN ou Nome" onkeyup="filtrarHistorico()">
+            <input type="date" id="fData" onchange="filtrarHistorico()">
+            <select id="fTipo" onchange="filtrarHistorico()">
+                <option value="">Todos</option>
+                <option value="entrada">Entradas</option>
+                <option value="saida">Saídas</option>
+            </select>
+        </div>
         <div class="table-container">
             <table>
-                <thead><tr><th>Data</th><th>PN</th><th>Tipo</th><th>Operador</th></tr></thead>
+                <thead><tr><th>Data</th><th>Item</th><th>Tipo</th><th>Qtd</th><th>Responsável</th></tr></thead>
                 <tbody id="tabHis"></tbody>
             </table>
         </div>
     </div>
-
-    <div id="ale" class="section"><div id="alertas"></div></div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -93,21 +99,19 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let userEmail = "";
+let produtosCache = [];
 
-// Segurança e Auth
 onAuthStateChanged(auth, user => {
     if (user) {
         userEmail = user.email;
-        document.getElementById('userInfo').innerText = user.email;
+        document.getElementById('userInfo').innerText = "Operador: " + user.email;
         carregarDatalist();
     } else {
         window.location.href = "login.html";
     }
 });
 
-window.logout = () => signOut(auth).then(() => window.location.href="login.html");
-
-// Controle de Abas
+// ABAS
 window.aba = (evt, name) => {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
@@ -115,92 +119,107 @@ window.aba = (evt, name) => {
     evt.currentTarget.classList.add('active');
     if(name === 'est') renderEstoque();
     if(name === 'his') renderHistorico();
-    if(name === 'ale') renderAlertas();
 };
 
-// CRUD
+// CADASTRAR
 window.cadastrar = async () => {
     const pn = document.getElementById('pn').value;
     const name = document.getElementById('name').value;
     if(!pn || !name) return alert("Preencha PN e Nome!");
-    
     await addDoc(collection(db, "produtos"), {
         pn, name, sn: document.getElementById('sn').value,
         min: parseInt(document.getElementById('min').value),
         responsavel: userEmail, data: serverTimestamp()
     });
-    alert("Cadastrado!"); location.reload();
+    alert("Salvo!"); location.reload();
 };
 
-window.movimentar = async () => {
-    const pn = document.getElementById('mPN').value;
-    const qtd = parseInt(document.getElementById('mQtd').value);
-    if(!pn || !qtd) return alert("Erro nos campos!");
-
-    await addDoc(collection(db, "movimentacoes"), {
-        pn, qtd, sn: document.getElementById('mSN').value,
-        tipo: document.getElementById('mTipo').value,
-        responsavel: userEmail, data: serverTimestamp()
-    });
-    alert("Sucesso!"); document.getElementById('mQtd').value = "";
-};
-
-async function getDados() {
-    const p = await getDocs(collection(db, "produtos"));
-    const m = await getDocs(collection(db, "movimentacoes"));
-    let saldos = {};
-    p.forEach(doc => {
-        const d = doc.data();
-        saldos[d.pn] = { nome: d.name, min: d.min, total: 0 };
-    });
-    m.forEach(doc => {
-        const d = doc.data();
-        if(saldos[d.pn]) saldos[d.pn].total += (d.tipo === 'entrada' ? d.qtd : -d.qtd);
-    });
-    return saldos;
-}
-
-window.renderEstoque = async () => {
-    const dados = await getDados();
-    const out = document.getElementById('tabEst');
-    out.innerHTML = "";
-    for(let k in dados) {
-        out.innerHTML += `<tr><td>${k}</td><td>${dados[k].nome}</td><td><b>${dados[k].total}</b></td></tr>`;
-    }
-};
-
-window.renderHistorico = async () => {
-    const q = query(collection(db, "movimentacoes"), orderBy("data", "desc"));
-    const snap = await getDocs(q);
-    const out = document.getElementById('tabHis');
-    out.innerHTML = "";
-    snap.forEach(doc => {
-        const d = doc.data();
-        const dt = d.data ? d.data.toDate().toLocaleDateString() : "...";
-        out.innerHTML += `<tr><td>${dt}</td><td>${d.pn}</td><td>${d.tipo}</td><td>${d.responsavel}</td></tr>`;
-    });
-};
-
-window.renderAlertas = async () => {
-    const dados = await getDados();
-    const out = document.getElementById('alertas');
-    out.innerHTML = "";
-    for(let k in dados) {
-        if(dados[k].total <= dados[k].min) {
-            out.innerHTML += `<div class="alerta">⚠️ ${dados[k].nome} (${k}) está com apenas ${dados[k].total} unidades.</div>`;
-        }
-    }
-};
-
+// BUSCA INTELIGENTE
 async function carregarDatalist() {
     const snap = await getDocs(collection(db, "produtos"));
     const list = document.getElementById('prodList');
+    produtosCache = [];
     snap.forEach(doc => {
+        const d = doc.data();
+        produtosCache.push(d);
         const opt = document.createElement('option');
-        opt.value = doc.data().pn;
+        opt.value = d.pn; 
+        opt.innerText = d.name; // Aparece o nome na busca
         list.appendChild(opt);
     });
 }
+
+// REGISTRAR MOVIMENTAÇÃO
+window.movimentar = async () => {
+    const busca = document.getElementById('mBusca').value;
+    const qtd = parseInt(document.getElementById('mQtd').value);
+    if(!busca || !qtd) return alert("Preencha os campos!");
+
+    await addDoc(collection(db, "movimentacoes"), {
+        pn: busca,
+        qtd, 
+        sn: document.getElementById('mSN').value,
+        tipo: document.getElementById('mTipo').value,
+        responsavel: userEmail, data: serverTimestamp()
+    });
+    alert("Registrado!"); document.getElementById('mQtd').value = "";
+};
+
+// RENDERIZAR ESTOQUE
+window.renderEstoque = async () => {
+    const p = await getDocs(collection(db, "produtos"));
+    const m = await getDocs(collection(db, "movimentacoes"));
+    let saldos = {};
+    p.forEach(doc => { saldos[doc.data().pn] = { nome: doc.data().name, total: 0 }; });
+    m.forEach(doc => { 
+        const d = doc.data();
+        if(saldos[d.pn]) saldos[d.pn].total += (d.tipo === 'entrada' ? d.qtd : -d.qtd);
+    });
+    const out = document.getElementById('tabEst');
+    out.innerHTML = "";
+    for(let k in saldos) {
+        out.innerHTML += `<tr><td>${k}</td><td>${saldos[k].nome}</td><td><b>${saldos[k].total}</b></td></tr>`;
+    }
+};
+
+// HISTÓRICO COM FILTROS EM TEMPO REAL
+let logsFull = [];
+window.renderHistorico = async () => {
+    const q = query(collection(db, "movimentacoes"), orderBy("data", "desc"));
+    const snap = await getDocs(q);
+    logsFull = [];
+    snap.forEach(doc => {
+        const d = doc.data();
+        const dt = d.data ? d.data.toDate() : new Date();
+        logsFull.push({...d, dataObj: dt});
+    });
+    filtrarHistorico();
+};
+
+window.filtrarHistorico = () => {
+    const fPN = document.getElementById('fPN').value.toLowerCase();
+    const fTipo = document.getElementById('fTipo').value;
+    const fData = document.getElementById('fData').value;
+    
+    const out = document.getElementById('tabHis');
+    out.innerHTML = "";
+    
+    logsFull.filter(log => {
+        const matchesPN = log.pn.toLowerCase().includes(fPN);
+        const matchesTipo = fTipo === "" || log.tipo === fTipo;
+        const matchesData = fData === "" || log.dataObj.toISOString().split('T')[0] === fData;
+        return matchesPN && matchesTipo && matchesData;
+    }).forEach(log => {
+        out.innerHTML += `<tr>
+            <td>${log.dataObj.toLocaleString()}</td>
+            <td>${log.pn}</td>
+            <td style="color:${log.tipo === 'entrada' ? 'green':'red'}">${log.tipo.toUpperCase()}</td>
+            <td>${log.qtd}</td>
+            <td>${log.responsavel}</td>
+        </tr>`;
+    });
+};
+
 </script>
 </body>
 </html>
