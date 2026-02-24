@@ -1,17 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Estoque - Panorama</title>
+    <title>Estoque | Panorama</title>
 </head>
 <body>
 
 <header>
-    <div style="font-weight: bold;">PANORAMA HEALTH</div>
-    <div id="uEmail" style="font-size: 12px;">...</div>
-    <button onclick="window.location.href='painel.html'" style="background:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">VOLTAR</button>
+    <div style="font-weight: 800; color: var(--primary); letter-spacing: -0.5px;">PANORAMA HEALTH</div>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <span id="uEmail" style="font-size: 12px; color: var(--text-muted); display: none; @media (min-width: 600px) { display: block; }">...</span>
+        <button class="btn" style="padding: 6px 15px; background: #f1f5f9;" onclick="window.location.href='painel.html'">VOLTAR</button>
+    </div>
 </header>
 
 <div class="container">
@@ -24,34 +26,58 @@
     </div>
 
     <div id="cad" class="section active">
-        <div class="form-grid">
-            <div class="input-group"><label>PART NUMBER</label><input type="text" id="pn"></div>
-            <div class="input-group"><label>NOME DO ITEM</label><input type="text" id="name"></div>
-            <div class="input-group"><label>LOCALIZAÇÃO</label><input type="text" id="local"></div>
-            <div class="input-group"><label>ESTOQUE MÍNIMO</label><input type="number" id="min" value="2"></div>
+        <div class="table-area" style="padding: 20px; border: none;">
+            <div class="form-grid">
+                <div class="input-group"><label>Part Number</label><input type="text" id="pn" placeholder="Ex: PN123"></div>
+                <div class="input-group"><label>Nome do Item</label><input type="text" id="name" placeholder="Descrição do produto"></div>
+                <div class="input-group"><label>Localização</label><input type="text" id="local" placeholder="Ex: Prateleira A1"></div>
+                <div class="input-group"><label>Estoque Mínimo</label><input type="number" id="min" value="2"></div>
+            </div>
+            <button class="btn btn-primary" onclick="cadastrar()">CADASTRAR ITEM</button>
         </div>
-        <button class="btn" onclick="cadastrar()">CADASTRAR ITEM</button>
     </div>
 
     <div id="mov" class="section">
-        <div class="form-grid">
-            <div class="input-group"><label>BUSCAR PN</label><input list="lPN" id="mPN" onchange="sync(this.value, 'pn')"></div>
-            <div class="input-group"><label>BUSCAR NOME</label><input list="lName" id="mName" onchange="sync(this.value, 'name')"></div>
-            <div class="input-group"><label>QUANTIDADE</label><input type="number" id="mQtd"></div>
-            <div class="input-group"><label>TIPO</label><select id="mTipo"><option value="entrada">ENTRADA (+)</option><option value="saida">SAÍDA (-)</option></select></div>
-            <datalist id="lPN"></datalist><datalist id="lName"></datalist>
+        <div class="table-area" style="padding: 20px; border: none;">
+            <div class="form-grid">
+                <div class="input-group"><label>Buscar PN</label><input list="lPN" id="mPN" onchange="sync(this.value, 'pn')" placeholder="Digite o PN"></div>
+                <div class="input-group"><label>Buscar Nome</label><input list="lName" id="mName" onchange="sync(this.value, 'name')" placeholder="Digite o nome"></div>
+                <div class="input-group"><label>Quantidade</label><input type="number" id="mQtd"></div>
+                <div class="input-group">
+                    <label>Tipo</label>
+                    <select id="mTipo">
+                        <option value="entrada">ENTRADA (+)</option>
+                        <option value="saida">SAÍDA (-)</option>
+                    </select>
+                </div>
+                <datalist id="lPN"></datalist><datalist id="lName"></datalist>
+            </div>
+            <button class="btn btn-primary" onclick="movimentar()">REGISTRAR MOVIMENTAÇÃO</button>
         </div>
-        <button class="btn" onclick="movimentar()">REGISTRAR MOVIMENTAÇÃO</button>
     </div>
 
-    <div id="est" class="section"><div class="table-area"><table><thead><tr><th>PN</th><th>NOME</th><th>LOCAL</th><th>SALDO</th></tr></thead><tbody id="tabEst"></tbody></table></div></div>
-    
+    <div id="est" class="section">
+        <div class="table-area">
+            <table>
+                <thead><tr><th>PN</th><th>NOME</th><th>LOCAL</th><th>SALDO ATUAL</th></tr></thead>
+                <tbody id="tabEst"></tbody>
+            </table>
+        </div>
+    </div>
+
     <div id="his" class="section">
-        <input type="text" id="fHist" placeholder="Filtrar por PN ou Nome..." onkeyup="filtrarHist()" style="width:100%; padding:10px; margin-bottom:10px;">
-        <div class="table-area"><table><thead><tr><th>DATA</th><th>ITEM</th><th>TIPO</th><th>QTD</th><th>OPERADOR</th></tr></thead><tbody id="tabHis"></tbody></table></div>
+        <input type="text" id="fHist" placeholder="🔍 Filtrar histórico por PN ou Nome..." onkeyup="filtrarHist()" style="margin-bottom: 15px;">
+        <div class="table-area">
+            <table>
+                <thead><tr><th>DATA</th><th>ITEM</th><th>TIPO</th><th>QTD</th><th>OPERADOR</th></tr></thead>
+                <tbody id="tabHis"></tbody>
+            </table>
+        </div>
     </div>
 
-    <div id="ale" class="section"><div id="aleCont"></div></div>
+    <div id="ale" class="section">
+        <div id="aleCont"></div>
+    </div>
 </div>
 
 <script type="module">
@@ -74,68 +100,149 @@
     let uEmail = ""; let pCache = [];
 
     onAuthStateChanged(auth, user => {
-        if (user) { uEmail = user.email; document.getElementById('uEmail').innerText = user.email; loadBase(); }
-        else window.location.href = "login.html";
+        if (user) { 
+            uEmail = user.email; 
+            document.getElementById('uEmail').innerText = user.email; 
+            loadBase(); 
+        } else {
+            window.location.href = "login.html";
+        }
     });
 
     window.aba = (e, n) => {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-        document.getElementById(n).classList.add('active'); e.currentTarget.classList.add('active');
-        if(n === 'est') renderEstoque(); if(n === 'his') renderHistorico(); if(n === 'ale') renderAlertas();
+        document.getElementById(n).classList.add('active'); 
+        e.currentTarget.classList.add('active');
+        if(n === 'est') renderEstoque(); 
+        if(n === 'his') renderHistorico(); 
+        if(n === 'ale') renderAlertas();
     };
 
     window.sync = (v, t) => {
         const item = pCache.find(p => t === 'pn' ? p.pn === v : p.name === v);
-        if(item) { document.getElementById('mPN').value = item.pn; document.getElementById('mName').value = item.name; }
+        if(item) { 
+            document.getElementById('mPN').value = item.pn; 
+            document.getElementById('mName').value = item.name; 
+        }
     };
 
     async function loadBase() {
         const snap = await getDocs(collection(db, "produtos"));
-        pCache = []; const dPN = document.getElementById('lPN'); const dName = document.getElementById('lName');
+        pCache = []; 
+        const dPN = document.getElementById('lPN'); 
+        const dName = document.getElementById('lName');
         dPN.innerHTML = ""; dName.innerHTML = "";
-        snap.forEach(doc => { const d = doc.data(); pCache.push(d); dPN.innerHTML += `<option value="${d.pn}">`; dName.innerHTML += `<option value="${d.name}">`; });
+        snap.forEach(doc => { 
+            const d = doc.data(); 
+            pCache.push(d); 
+            dPN.innerHTML += `<option value="${d.pn}">`; 
+            dName.innerHTML += `<option value="${d.name}">`; 
+        });
     }
 
     window.cadastrar = async () => {
-        await addDoc(collection(db, "produtos"), { pn: document.getElementById('pn').value, name: document.getElementById('name').value, local: document.getElementById('local').value, min: parseInt(document.getElementById('min').value), responsavel: uEmail, data: serverTimestamp() });
+        const pn = document.getElementById('pn').value;
+        if(!pn) return alert("Preencha o Part Number");
+        await addDoc(collection(db, "produtos"), { 
+            pn, 
+            name: document.getElementById('name').value, 
+            local: document.getElementById('local').value, 
+            min: parseInt(document.getElementById('min').value), 
+            responsavel: uEmail, 
+            data: serverTimestamp() 
+        });
+        alert("Item cadastrado!");
         location.reload();
     };
 
     window.movimentar = async () => {
-        await addDoc(collection(db, "movimentacoes"), { pn: document.getElementById('mPN').value, qtd: parseInt(document.getElementById('mQtd').value), tipo: document.getElementById('mTipo').value, responsavel: uEmail, data: serverTimestamp() });
+        const pn = document.getElementById('mPN').value;
+        const qtd = parseInt(document.getElementById('mQtd').value);
+        if(!pn || !qtd) return alert("Preencha PN e Quantidade");
+        
+        await addDoc(collection(db, "movimentacoes"), { 
+            pn, 
+            qtd, 
+            tipo: document.getElementById('mTipo').value, 
+            responsavel: uEmail, 
+            data: serverTimestamp() 
+        });
+        alert("Movimentação registrada!");
         location.reload();
     };
 
     async function getSaldos() {
-        const pS = await getDocs(collection(db, "produtos")); const mS = await getDocs(collection(db, "movimentacoes"));
+        const pS = await getDocs(collection(db, "produtos")); 
+        const mS = await getDocs(collection(db, "movimentacoes"));
         let s = {};
-        pS.forEach(d => { const v = d.data(); s[v.pn] = { nome: v.name, min: v.min, local: v.local, total: 0 }; });
-        mS.forEach(d => { const v = d.data(); if(s[v.pn]) s[v.pn].total += (v.tipo === 'entrada' ? v.qtd : -v.qtd); });
+        pS.forEach(d => { 
+            const v = d.data(); 
+            s[v.pn] = { nome: v.name, min: v.min, local: v.local, total: 0 }; 
+        });
+        mS.forEach(d => { 
+            const v = d.data(); 
+            if(s[v.pn]) s[v.pn].total += (v.tipo === 'entrada' ? v.qtd : -v.qtd); 
+        });
         return s;
     }
 
     window.renderEstoque = async () => {
-        const d = await getSaldos(); const out = document.getElementById('tabEst'); out.innerHTML = "";
-        for(let k in d) out.innerHTML += `<tr><td>${k}</td><td>${d[k].nome}</td><td>${d[k].local || '-'}</td><td><b>${d[k].total}</b></td></tr>`;
+        const d = await getSaldos(); 
+        const out = document.getElementById('tabEst'); 
+        out.innerHTML = "";
+        for(let k in d) {
+            out.innerHTML += `<tr>
+                <td><b>${k}</b></td>
+                <td>${d[k].nome}</td>
+                <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size:12px;">${d[k].local || '-'}</span></td>
+                <td><b style="color:${d[k].total <= d[k].min ? 'var(--danger)' : 'var(--text-main)'}">${d[k].total}</b></td>
+            </tr>`;
+        }
     };
 
     window.renderAlertas = async () => {
-        const d = await getSaldos(); const out = document.getElementById('aleCont'); out.innerHTML = "";
-        for(let k in d) if(d[k].total <= d[k].min) out.innerHTML += `<div class="alerta-item"><div><b>${d[k].nome}</b><br>PN: ${k}</div><div>Atual: ${d[k].total} / Mín: ${d[k].min}</div></div>`;
+        const d = await getSaldos(); 
+        const out = document.getElementById('aleCont'); 
+        out.innerHTML = "";
+        let temAlerta = false;
+        for(let k in d) {
+            if(d[k].total <= d[k].min) {
+                temAlerta = true;
+                out.innerHTML += `<div class="alerta-item">
+                    <div><b>${d[k].nome}</b><br><small>PN: ${k}</small></div>
+                    <div style="text-align:right">
+                        <span style="color:var(--danger); font-weight:700">Crítico: ${d[k].total}</span><br>
+                        <small>Mínimo: ${d[k].min}</small>
+                    </div>
+                </div>`;
+            }
+        }
+        if(!temAlerta) out.innerHTML = "<p style='color:var(--success); text-align:center;'>✅ Todos os itens estão com saldo ok.</p>";
     };
 
     let hCache = [];
     window.renderHistorico = async () => {
         const snap = await getDocs(query(collection(db, "movimentacoes"), orderBy("data", "desc")));
-        hCache = []; snap.forEach(d => hCache.push(d.data())); filtrarHist();
+        hCache = []; 
+        snap.forEach(d => hCache.push(d.data())); 
+        filtrarHist();
     };
 
     window.filtrarHist = () => {
-        const t = document.getElementById('fHist').value.toLowerCase(); const out = document.getElementById('tabHis'); out.innerHTML = "";
+        const t = document.getElementById('fHist').value.toLowerCase(); 
+        const out = document.getElementById('tabHis'); 
+        out.innerHTML = "";
         hCache.filter(h => h.pn.toLowerCase().includes(t)).forEach(h => {
-            const dt = h.data ? h.data.toDate().toLocaleString() : "...";
-            out.innerHTML += `<tr><td>${dt}</td><td>${h.pn}</td><td>${h.tipo}</td><td>${h.qtd}</td><td>${h.responsavel}</td></tr>`;
+            const dt = h.data ? h.data.toDate().toLocaleString('pt-BR') : "...";
+            const corTipo = h.tipo === 'entrada' ? 'var(--success)' : 'var(--danger)';
+            out.innerHTML += `<tr>
+                <td style="font-size:12px; color:var(--text-muted)">${dt}</td>
+                <td><b>${h.pn}</b></td>
+                <td><span style="color:${corTipo}; font-weight:bold; text-transform:uppercase; font-size:11px;">${h.tipo}</span></td>
+                <td>${h.qtd}</td>
+                <td style="font-size:12px;">${h.responsavel.split('@')[0]}</td>
+            </tr>`;
         });
     };
 </script>
