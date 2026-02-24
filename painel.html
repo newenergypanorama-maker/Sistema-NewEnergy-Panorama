@@ -1,30 +1,23 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Panel | Panorama Health</title>
+    <title>Painel | Panorama Health</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <header>
-    <div style="display: flex; align-items: center; gap: 15px;">
-        <img src="logo.png" class="logo">
-        <h1>NewEnergy - Panorama</h1>
-    </div>
-    <button onclick="logout()" style="width: auto; padding: 8px 16px; background: #F1F5F9; color: #475569; margin: 0;">Salir</button>
+    <h1>Panorama Health - NewEnergy</h1>
+    <button onclick="logout()" style="width: auto; padding: 5px 15px; background: #fee2e2; color: #b91c1c; margin:0">Sair</button>
 </header>
 
 <div class="main">
-    <div class="container" style="max-width: 600px; text-align: center;">
-        <div style="font-size: 2.5rem; margin-bottom: 10px;">🏥</div>
-        <h2>Gestión Administrativa</h2>
-        <p style="color: #64748B; margin-bottom: 2rem;">Bienvenido al centro de control operativo.</p>
+    <div class="container" style="text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🏥</div>
+        <h2>Painel de Controle</h2>
+        <p style="color: #64748B; margin-bottom: 2rem;">Selecione o módulo administrativo</p>
 
-        <div style="display: grid; gap: 12px;">
-            <button class="primary" onclick="window.location.href='estoque.html'">📦 Control de Inventario</button>
-            <button class="google" disabled style="cursor: not-allowed; opacity: 0.6;">📋 Registro de Pacientes (Próximamente)</button>
-        </div>
+        <button class="primary" onclick="window.location.href='estoque.html'">📦 Controle de Estoque</button>
     </div>
 </div>
 
@@ -33,19 +26,18 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
-  authDomain: "sistema-newenergy-panora-24697.firebaseapp.com",
-  projectId: "sistema-newenergy-panora-24697",
-  storageBucket: "sistema-newenergy-panora-24697.firebasestorage.app",
-  messagingSenderId: "503251309234",
-  appId: "1:503251309234:web:8f4d905e5e4b1f496befab"
+    apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
+    authDomain: "sistema-newenergy-panora-24697.firebaseapp.com",
+    projectId: "sistema-newenergy-panora-24697",
+    storageBucket: "sistema-newenergy-panora-24697.firebasestorage.app",
+    messagingSenderId: "503251309234",
+    appId: "1:503251309234:web:8f4d905e5e4b1f496befab"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 onAuthStateChanged(auth, user => { if (!user) window.location.href = "login.html"; });
-
 window.logout = () => signOut(auth).then(() => window.location.href = "login.html");
 </script>
 </body>
