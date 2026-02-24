@@ -1,161 +1,84 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Gestão Profissional de Estoque</title>
-
-<style>
-body{
-  font-family: Arial;
-  background:#F3F4F6;
-  margin:0;
-}
-header{
-  background:#1E3A8A;
-  color:white;
-  padding:15px;
-  text-align:center;
-}
-.container{
-  max-width:1100px;
-  margin:30px auto;
-  background:white;
-  padding:25px;
-  border-radius:8px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.08);
-}
-.tabs{
-  display:flex;
-  border-bottom:2px solid #E5E7EB;
-  margin-bottom:20px;
-}
-.tabs button{
-  background:none;
-  border:none;
-  padding:14px 20px;
-  cursor:pointer;
-  font-weight:600;
-  border-bottom:3px solid transparent;
-}
-.tabs button.active{
-  border-bottom:3px solid #2563EB;
-  color:#2563EB;
-}
-.section{ display:none; }
-.section.active{ display:block; }
-
-input, select{
-  width:100%;
-  padding:10px;
-  margin-bottom:10px;
-  border:1px solid #D1D5DB;
-  border-radius:6px;
-}
-button.primary{
-  background:#2563EB;
-  color:white;
-  padding:10px 15px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-th, td{
-  border:1px solid #E5E7EB;
-  padding:8px;
-  text-align:left;
-}
-th{
-  background:#F9FAFB;
-}
-.alerta{
-  background:#FEE2E2;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:6px;
-  color:#991B1B;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Inventario | Panorama Health</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .tabs { display: flex; gap: 8px; margin-bottom: 25px; background: #F1F5F9; padding: 5px; border-radius: 10px; }
+        .tabs button { margin: 0; background: transparent; color: #64748B; padding: 10px; font-size: 13px; }
+        .tabs button.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .section { display: none; }
+        .section.active { display: block; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
-
 <body>
 
 <header>
-<h1>Sistema Profissional de Estoque</h1>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <img src="logo.png" class="logo">
+        <h1>Inventario Profesional</h1>
+    </div>
+    <button onclick="window.location.href='painel.html'" style="width: auto; padding: 8px 16px; background: #F1F5F9; color: #475569; margin: 0;">Volver</button>
 </header>
 
-<div class="container">
+<div class="main" style="padding-top: 2rem;">
+    <div class="container" style="max-width: 900px;">
+        <div class="tabs">
+            <button onclick="mostrar('cadastro',this)" class="active">Registro</button>
+            <button onclick="mostrar('mov',this)">Movimientos</button>
+            <button onclick="mostrar('atual',this)">Stock Actual</button>
+            <button onclick="mostrar('minimo',this)">Alertas</button>
+        </div>
 
-<div class="tabs">
-  <button onclick="mostrar('cadastro',this)" class="active">Cadastro Produto</button>
-  <button onclick="mostrar('mov',this)">Movimentação</button>
-  <button onclick="mostrar('atual',this)">Estoque Atual</button>
-  <button onclick="mostrar('minimo',this)">Estoque Mínimo</button>
-</div>
+        <div id="cadastro" class="section active">
+            <h2>Nuevo Producto</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="text" id="pn" placeholder="Part Number">
+                <input type="text" id="name" placeholder="Nombre del Material">
+                <input type="text" id="fabricante" placeholder="Fabricante">
+                <input type="text" id="sn" placeholder="Serial Number (SN)">
+                <input type="number" id="min" placeholder="Stock Mínimo">
+            </div>
+            <button class="primary" onclick="cadastrarProduto()">Registrar en Base de Datos</button>
+        </div>
 
-<!-- CADASTRO -->
-<div id="cadastro" class="section active">
-<h2>Novo Produto</h2>
+        <div id="mov" class="section">
+            <h2>Movimentación de Carga</h2>
+            <input list="listaProdutos" id="movPN" placeholder="Escriba Part Number...">
+            <datalist id="listaProdutos"></datalist>
+            <input type="text" id="movName" placeholder="Nombre (Auto)" readonly style="background:#F9FAFB">
+            <input type="number" id="movQtd" placeholder="Cantidad">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="text" id="origem" placeholder="Origen">
+                <input type="text" id="destino" placeholder="Destino">
+            </div>
+            <select id="tipo">
+                <option value="entrada">Entrada (+)</option>
+                <option value="saida">Salida (-)</option>
+            </select>
+            <button class="primary" onclick="registrarMov()">Confirmar Operación</button>
+        </div>
 
-<input type="text" id="pn" placeholder="Part Number">
-<input type="text" id="name" placeholder="Part Name">
-<input type="text" id="fabricante" placeholder="Fabricante">
-<input type="text" id="sn" placeholder="Serial Number (SN)">
-<input type="number" id="min" placeholder="Estoque Mínimo">
+        <div id="atual" class="section">
+            <h2>Stock Consolidado</h2>
+            <table>
+                <thead>
+                    <tr><th>Part Number</th><th>Nombre</th><th>Saldo</th></tr>
+                </thead>
+                <tbody id="tabelaAtual"></tbody>
+            </table>
+        </div>
 
-<button class="primary" onclick="cadastrarProduto()">Cadastrar Produto</button>
-</div>
-
-<!-- MOVIMENTAÇÃO -->
-<div id="mov" class="section">
-<h2>Movimentação</h2>
-
-<input list="listaProdutos" id="movPN" placeholder="Part Number">
-<datalist id="listaProdutos"></datalist>
-
-<input type="text" id="movName" placeholder="Part Name (automático)">
-<input type="number" id="movQtd" placeholder="Quantidade">
-<input type="text" id="origem" placeholder="Origem">
-<input type="text" id="destino" placeholder="Destino">
-<input type="text" id="cliente" placeholder="Cliente">
-<input type="text" id="os" placeholder="Ordem de Serviço (OS)">
-
-<select id="tipo">
-<option value="entrada">Entrada</option>
-<option value="saida">Saída</option>
-</select>
-
-<button class="primary" onclick="registrarMov()">Registrar Movimentação</button>
-</div>
-
-<!-- ESTOQUE ATUAL -->
-<div id="atual" class="section">
-<h2>Estoque Atual Consolidado</h2>
-<table>
-<thead>
-<tr>
-<th>Part Number</th>
-<th>Part Name</th>
-<th>Saldo</th>
-</tr>
-</thead>
-<tbody id="tabelaAtual"></tbody>
-</table>
-</div>
-
-<!-- ESTOQUE MINIMO -->
-<div id="minimo" class="section">
-<h2>Produtos Abaixo do Mínimo</h2>
-<div id="alertas"></div>
-</div>
-
+        <div id="minimo" class="section">
+            <h2>Alertas de Reposición</h2>
+            <div id="alertas"></div>
+        </div>
+    </div>
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -171,167 +94,95 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* TABS */
-window.mostrar = function(sec,btn){
- document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
- document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
- document.getElementById(sec).classList.add('active');
- btn.classList.add('active');
- if(sec==="atual") carregarEstoque();
- if(sec==="minimo") verificarMinimo();
-}
+window.mostrar = (sec, btn) => {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    document.getElementById(sec).classList.add('active');
+    btn.classList.add('active');
+    if(sec==="atual") carregarEstoque();
+    if(sec==="minimo") verificarMinimo();
+};
 
-/* CADASTRAR PRODUTO */
-window.cadastrarProduto = async function(){
+window.cadastrarProduto = async function() {
+    const data = {
+        partNumber: document.getElementById("pn").value,
+        partName: document.getElementById("name").value,
+        fabricante: document.getElementById("fabricante").value,
+        serialNumber: document.getElementById("sn").value,
+        estoqueMinimo: parseInt(document.getElementById("min").value) || 0,
+        createdAt: serverTimestamp()
+    };
+    if(!data.partNumber || !data.partName) return alert("Faltan datos");
+    await addDoc(collection(db, "produtos"), data);
+    alert("Producto registrado");
+    location.reload();
+};
 
- const partNumber = document.getElementById("pn").value;
- const partName = document.getElementById("name").value;
- const fabricante = document.getElementById("fabricante").value;
- const serialNumber = document.getElementById("sn").value;
- const estoqueMinimo = parseInt(document.getElementById("min").value) || 0;
-
- if(!partNumber || !partName){
-   alert("Preencha Part Number e Part Name!");
-   return;
- }
-
- await addDoc(collection(db,"produtos"),{
-   partNumber,
-   partName,
-   fabricante,
-   serialNumber,
-   estoqueMinimo,
-   createdAt: serverTimestamp()
- });
-
- alert("Produto cadastrado com sucesso!");
-
- document.getElementById("pn").value="";
- document.getElementById("name").value="";
- document.getElementById("fabricante").value="";
- document.getElementById("sn").value="";
- document.getElementById("min").value="";
-
- carregarProdutos();
-}
-
-/* CARREGAR PRODUTOS */
-async function carregarProdutos(){
- const snap = await getDocs(collection(db,"produtos"));
- const lista = document.getElementById("listaProdutos");
- lista.innerHTML="";
- snap.forEach(doc=>{
-  const p=doc.data();
-  const option=document.createElement("option");
-  option.value=p.partNumber;
-  lista.appendChild(option);
- });
+async function carregarProdutos() {
+    const snap = await getDocs(collection(db, "produtos"));
+    const lista = document.getElementById("listaProdutos");
+    snap.forEach(doc => {
+        const p = doc.data();
+        const opt = document.createElement("option");
+        opt.value = p.partNumber;
+        lista.appendChild(opt);
+    });
 }
 carregarProdutos();
 
-/* AUTO PREENCHER */
-document.getElementById("movPN").addEventListener("change",async e=>{
- const pn=e.target.value;
- const snap=await getDocs(collection(db,"produtos"));
- snap.forEach(doc=>{
-  const p=doc.data();
-  if(p.partNumber===pn){
-   document.getElementById("movName").value=p.partName;
-  }
- });
+document.getElementById("movPN").addEventListener("change", async e => {
+    const snap = await getDocs(collection(db, "produtos"));
+    snap.forEach(doc => {
+        if(doc.data().partNumber === e.target.value) 
+            document.getElementById("movName").value = doc.data().partName;
+    });
 });
 
-/* MOVIMENTAÇÃO */
-window.registrarMov = async function(){
+window.registrarMov = async function() {
+    const mov = {
+        partNumber: document.getElementById("movPN").value,
+        partName: document.getElementById("movName").value,
+        quantidade: parseInt(document.getElementById("movQtd").value),
+        tipo: document.getElementById("tipo").value,
+        createdAt: serverTimestamp()
+    };
+    await addDoc(collection(db, "movimentacoes"), mov);
+    alert("Movimiento registrado");
+};
 
- const pn = document.getElementById("movPN").value;
- const nome = document.getElementById("movName").value;
- const qtd = parseInt(document.getElementById("movQtd").value);
- const tipo = document.getElementById("tipo").value;
-
- if(!pn || !qtd){
-   alert("Preencha Part Number e Quantidade");
-   return;
- }
-
- let saldo=0;
- const snap=await getDocs(collection(db,"movimentacoes"));
- snap.forEach(doc=>{
-  const d=doc.data();
-  if(d.partNumber===pn){
-   if(d.tipo==="entrada") saldo+=d.quantidade;
-   if(d.tipo==="saida") saldo-=d.quantidade;
-  }
- });
-
- if(tipo==="saida" && qtd>saldo){
-  alert("Saldo insuficiente!");
-  return;
- }
-
- await addDoc(collection(db,"movimentacoes"),{
-  partNumber:pn,
-  partName:nome,
-  quantidade:qtd,
-  tipo,
-  origem:origem.value,
-  destino:destino.value,
-  cliente:cliente.value,
-  OS:os.value,
-  createdAt:serverTimestamp()
- });
-
- alert("Movimentação registrada!");
+async function carregarEstoque() {
+    const tabela = document.getElementById("tabelaAtual");
+    tabela.innerHTML = "";
+    const snap = await getDocs(collection(db, "movimentacoes"));
+    const mapa = {};
+    snap.forEach(doc => {
+        const d = doc.data();
+        if(!mapa[d.partNumber]) mapa[d.partNumber] = {name: d.partName, saldo: 0};
+        mapa[d.partNumber].saldo += (d.tipo === "entrada" ? d.quantidade : -d.quantidade);
+    });
+    for(const pn in mapa) {
+        tabela.innerHTML += `<tr><td>${pn}</td><td>${mapa[pn].name}</td><td>${mapa[pn].saldo}</td></tr>`;
+    }
 }
 
-/* ESTOQUE ATUAL */
-async function carregarEstoque(){
- const tabela=document.getElementById("tabelaAtual");
- tabela.innerHTML="";
- const snap=await getDocs(collection(db,"movimentacoes"));
- const mapa={};
- snap.forEach(doc=>{
-  const d=doc.data();
-  if(!mapa[d.partNumber]) mapa[d.partNumber]={name:d.partName,saldo:0};
-  if(d.tipo==="entrada") mapa[d.partNumber].saldo+=d.quantidade;
-  if(d.tipo==="saida") mapa[d.partNumber].saldo-=d.quantidade;
- });
- for(const pn in mapa){
-  const tr=document.createElement("tr");
-  tr.innerHTML=`<td>${pn}</td><td>${mapa[pn].name}</td><td>${mapa[pn].saldo}</td>`;
-  tabela.appendChild(tr);
- }
+async function verificarMinimo() {
+    const div = document.getElementById("alertas");
+    div.innerHTML = "";
+    const prods = await getDocs(collection(db, "produtos"));
+    const movs = await getDocs(collection(db, "movimentacoes"));
+    const saldo = {};
+    movs.forEach(d => {
+        if(!saldo[d.data().partNumber]) saldo[d.data().partNumber] = 0;
+        saldo[d.data().partNumber] += (d.data().tipo === "entrada" ? d.data().quantidade : -d.data().quantidade);
+    });
+    prods.forEach(d => {
+        const p = d.data();
+        const atual = saldo[p.partNumber] || 0;
+        if(atual <= p.estoqueMinimo) {
+            div.innerHTML += `<div class="alerta">⚠️ ${p.partName} (${p.partNumber}) - Saldo: ${atual} (Mín: ${p.estoqueMinimo})</div>`;
+        }
+    });
 }
-
-/* ESTOQUE MINIMO */
-async function verificarMinimo(){
- const div=document.getElementById("alertas");
- div.innerHTML="";
- const produtos=await getDocs(collection(db,"produtos"));
- const mov=await getDocs(collection(db,"movimentacoes"));
-
- const saldo={};
-
- mov.forEach(doc=>{
-  const d=doc.data();
-  if(!saldo[d.partNumber]) saldo[d.partNumber]=0;
-  if(d.tipo==="entrada") saldo[d.partNumber]+=d.quantidade;
-  if(d.tipo==="saida") saldo[d.partNumber]-=d.quantidade;
- });
-
- produtos.forEach(doc=>{
-  const p=doc.data();
-  const atual=saldo[p.partNumber]||0;
-  if(atual<=p.estoqueMinimo){
-   const alerta=document.createElement("div");
-   alerta.className="alerta";
-   alerta.innerHTML=`${p.partName} (${p.partNumber}) abaixo do mínimo. Saldo: ${atual}`;
-   div.appendChild(alerta);
-  }
- });
-}
-
 </script>
-
 </body>
 </html>
