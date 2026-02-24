@@ -1,90 +1,99 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Gestão Pro | Panorama Health</title>
+    <title>Stock Enterprise | Panorama Health</title>
 </head>
 <body>
 
 <header>
-    <div style="font-weight: 800; font-size: 1.2rem;">PANORAMA <span style="color: var(--primary);">HEALTH</span></div>
-    <button class="btn btn-outline" onclick="window.location.href='painel.html'">Sair</button>
+    <div style="font-weight: 800; letter-spacing: -1px; font-size: 1.4rem;">
+        PANORAMA <span style="color: var(--primary);">HEALTH</span>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn" style="background: var(--bg); color: var(--text);" onclick="window.location.href='painel.html'">PAINEL</button>
+    </div>
 </header>
 
 <div class="container">
     <div class="stats-grid">
-        <div class="stat-card"><h3>Total Itens</h3><p id="statTotal">0</p></div>
-        <div class="stat-card"><h3>Estoque Baixo</h3><p id="statAlert" style="color: var(--danger);">0</p></div>
-        <div class="stat-card"><h3>Vencendo (30d)</h3><p id="statVenc" style="color: var(--warning);">0</p></div>
+        <div class="stat-card"><h3>Itens Totais</h3><p id="dashTotal">0</p></div>
+        <div class="stat-card"><h3>Alertas de Stock</h3><p id="dashAlert" style="color: var(--danger);">0</p></div>
+        <div class="stat-card"><h3>Validade (30 dias)</h3><p id="dashVenc" style="color: var(--warning);">0</p></div>
     </div>
 
     <div class="tabs">
-        <button onclick="aba(event, 'est')" class="active">ESTOQUE ATUAL</button>
-        <button onclick="aba(event, 'cad')">NOVO ITEM</button>
-        <button onclick="aba(event, 'mov')">MOVIMENTAR</button>
-        <button onclick="aba(event, 'his')">HISTÓRICO</button>
+        <button onclick="aba(event, 'est')" class="active">📊 STOCK ATUAL</button>
+        <button onclick="aba(event, 'cad')">➕ CADASTRAR ITEM</button>
+        <button onclick="aba(event, 'mov')">🔄 MOVIMENTAÇÃO</button>
+        <button onclick="aba(event, 'his')">📜 HISTÓRICO</button>
     </div>
 
     <div id="est" class="section active">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-            <input type="text" id="buscaEstoque" placeholder="🔍 Filtrar estoque..." onkeyup="renderEstoque()" style="width: 70%;">
-            <button class="btn btn-outline" onclick="exportarCSV()">📥 Exportar</button>
+        <div style="display: flex; gap: 10px; margin-bottom: 1.5rem;">
+            <input type="text" id="filtroEstoque" placeholder="🔍 Procurar por PN ou Nome..." onkeyup="renderEstoque()">
+            <button class="btn" style="background: var(--success); color:white" onclick="exportarCSV()">EXPORTAR</button>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Part Number</th>
-                    <th>Descrição</th>
-                    <th>Categoria</th>
-                    <th>Saldo</th>
-                    <th>Validade</th>
-                    <th>Local</th>
-                </tr>
-            </thead>
-            <tbody id="tabEst"></tbody>
-        </table>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Part Number</th>
+                        <th>Nome do Item</th>
+                        <th>Categoria</th>
+                        <th>Saldo</th>
+                        <th>Validade</th>
+                        <th>Local</th>
+                    </tr>
+                </thead>
+                <tbody id="tabEst"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="cad" class="section">
-        <div class="form-grid">
-            <div class="input-group"><label>PN (Part Number)</label><input type="text" id="pn"></div>
-            <div class="input-group"><label>Nome do Item</label><input type="text" id="name"></div>
-            <div class="input-group">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+            <div><label>Part Number</label><input type="text" id="pn"></div>
+            <div><label>Nome do Produto</label><input type="text" id="name"></div>
+            <div>
                 <label>Categoria</label>
                 <select id="cat">
-                    <option value="Insumos">Insumos</option>
-                    <option value="Equipamentos">Equipamentos</option>
-                    <option value="Escritório">Escritório</option>
+                    <option value="Reagentes">Reagentes</option>
+                    <option value="Consumíveis">Consumíveis</option>
+                    <option value="Hardware">Hardware</option>
                 </select>
             </div>
-            <div class="input-group"><label>Estoque Mínimo</label><input type="number" id="min" value="5"></div>
-            <div class="input-group"><label>Localização</label><input type="text" id="local"></div>
-            <div class="input-group"><label>Validade (se houver)</label><input type="date" id="val"></div>
+            <div><label>Stock Mínimo</label><input type="number" id="min" value="5"></div>
+            <div><label>Localização (Rua/Prateleira)</label><input type="text" id="local"></div>
+            <div><label>Data de Validade</label><input type="date" id="val"></div>
         </div>
-        <button class="btn btn-primary" onclick="cadastrar()">SALVAR ITEM</button>
+        <button class="btn btn-primary" style="margin-top: 2rem;" onclick="cadastrar()">GUARDAR NOVO ITEM</button>
     </div>
 
     <div id="mov" class="section">
-        <div class="form-grid">
-            <div class="input-group"><label>Item (PN)</label><input list="lPN" id="mPN" onchange="sync(this.value)"></div>
-            <div class="input-group"><label>Quantidade</label><input type="number" id="mQtd"></div>
-            <div class="input-group">
-                <label>Operação</label>
-                <select id="mTipo">
-                    <option value="entrada">ENTRADA (+)</option>
-                    <option value="saida">SAÍDA (-)</option>
-                </select>
-            </div>
+        <div style="max-width: 500px; margin: 0 auto;">
+            <label>Seleccionar Item (PN)</label>
+            <input list="lPN" id="mPN" placeholder="Procure o código...">
             <datalist id="lPN"></datalist>
+            
+            <label style="display:block; margin-top: 1rem;">Quantidade</label>
+            <input type="number" id="mQtd">
+
+            <label style="display:block; margin-top: 1rem;">Tipo de Operação</label>
+            <select id="mTipo">
+                <option value="entrada">ENTRADA (+)</option>
+                <option value="saida">SAÍDA (-)</option>
+            </select>
+
+            <button class="btn btn-primary" style="margin-top: 2rem;" onclick="movimentar()">REGISTAR OPERAÇÃO</button>
         </div>
-        <button class="btn btn-primary" onclick="movimentar()">CONFIRMAR MOVIMENTAÇÃO</button>
     </div>
 
     <div id="his" class="section">
         <table>
-            <thead><tr><th>Data</th><th>Item</th><th>Tipo</th><th>Qtd</th><th>Usuário</th></tr></thead>
+            <thead><tr><th>Data/Hora</th><th>Item</th><th>Tipo</th><th>Qtd</th><th>Operador</th></tr></thead>
             <tbody id="tabHis"></tbody>
         </table>
     </div>
@@ -147,7 +156,7 @@
             data: serverTimestamp()
         };
         await addDoc(collection(db, "produtos"), item);
-        alert("Item cadastrado com sucesso!");
+        alert("Sucesso: Item guardado!");
         location.reload();
     };
 
@@ -160,7 +169,7 @@
             data: serverTimestamp()
         };
         await addDoc(collection(db, "movimentacoes"), mov);
-        alert("Movimentação registrada!");
+        alert("Sucesso: Stock atualizado!");
         location.reload();
     };
 
@@ -169,52 +178,51 @@
         let saldos = {};
         pCache.forEach(p => saldos[p.pn] = { ...p, total: 0 });
         mS.forEach(m => {
-            const data = m.data();
-            if(saldos[data.pn]) saldos[data.pn].total += (data.tipo === 'entrada' ? data.qtd : -data.qtd);
+            const d = m.data();
+            if(saldos[d.pn]) saldos[d.pn].total += (d.tipo === 'entrada' ? d.qtd : -d.qtd);
         });
 
         const out = document.getElementById('tabEst');
+        const filtro = document.getElementById('filtroEstoque').value.toLowerCase();
         out.innerHTML = "";
-        let countAlert = 0; let countVenc = 0;
+        
+        let cAlert = 0; let cVenc = 0;
         const hoje = new Date();
-        const trintaDias = new Date(); trintaDias.setDate(hoje.getDate() + 30);
+        const limiteVenc = new Date(); limiteVenc.setDate(hoje.getDate() + 30);
 
         for(let k in saldos) {
-            const item = saldos[k];
-            const dataVal = item.val ? new Date(item.val) : null;
-            
-            // Lógica de Alertas
-            if(item.total <= item.min) countAlert++;
-            if(dataVal && dataVal <= trintaDias) countVenc++;
+            const i = saldos[k];
+            if(!i.pn.toLowerCase().includes(filtro) && !i.name.toLowerCase().includes(filtro)) continue;
+
+            const dVal = i.val ? new Date(i.val) : null;
+            if(i.total <= i.min) cAlert++;
+            if(dVal && dVal <= limiteVenc) cVenc++;
 
             out.innerHTML += `
                 <tr>
-                    <td><b>${item.pn}</b></td>
-                    <td>${item.name}</td>
-                    <td><span class="badge" style="background:#f1f5f9">${item.cat}</span></td>
-                    <td><span class="badge ${item.total <= item.min ? 'badge-danger' : 'badge-success'}">${item.total}</span></td>
-                    <td style="color: ${dataVal && dataVal <= trintaDias ? 'var(--danger)' : 'inherit'}">
-                        ${item.val ? new Date(item.val).toLocaleDateString() : '-'}
+                    <td><b>${i.pn}</b></td>
+                    <td>${i.name}</td>
+                    <td><span class="badge" style="background:#f1f5f9">${i.cat}</span></td>
+                    <td><span class="badge ${i.total <= i.min ? 'badge-low' : 'badge-ok'}">${i.total}</span></td>
+                    <td style="color:${dVal && dVal <= limiteVenc ? 'var(--danger)' : 'inherit'}">
+                        ${i.val ? dVal.toLocaleDateString() : 'N/A'}
                     </td>
-                    <td>${item.local}</td>
+                    <td>${i.local}</td>
                 </tr>`;
         }
-        document.getElementById('statTotal').innerText = pCache.length;
-        document.getElementById('statAlert').innerText = countAlert;
-        document.getElementById('statVenc').innerText = countVenc;
+        document.getElementById('dashTotal').innerText = pCache.length;
+        document.getElementById('dashAlert').innerText = cAlert;
+        document.getElementById('dashVenc').innerText = cVenc;
     };
 
     window.exportarCSV = () => {
-        let csv = "PN,Item,Saldo,Local\n";
-        document.querySelectorAll("#tabEst tr").forEach(tr => {
-            const cols = tr.querySelectorAll("td");
-            if(cols.length) csv += `${cols[0].innerText},${cols[1].innerText},${cols[3].innerText},${cols[5].innerText}\n`;
-        });
-        const blob = new Blob([csv], { type: 'text/csv' });
+        let content = "Part Number;Nome;Saldo;Validade;Local\n";
+        pCache.forEach(i => content += `${i.pn};${i.name};${i.total || 0};${i.val};${i.local}\n`);
+        const blob = new Blob([content], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.setAttribute('href', url);
-        a.setAttribute('download', 'estoque_panorama.csv');
+        a.href = url;
+        a.download = 'stock_panorama.csv';
         a.click();
     };
 
@@ -224,8 +232,8 @@
         snap.forEach(doc => {
             const d = doc.data();
             out.innerHTML += `<tr>
-                <td>${d.data?.toDate().toLocaleDateString()}</td>
-                <td>${d.pn}</td>
+                <td style="color:var(--text-muted)">${d.data?.toDate().toLocaleString()}</td>
+                <td><b>${d.pn}</b></td>
                 <td style="color:${d.tipo === 'entrada' ? 'var(--success)' : 'var(--danger)'}">${d.tipo.toUpperCase()}</td>
                 <td>${d.qtd}</td>
                 <td>${d.responsavel.split('@')[0]}</td>
