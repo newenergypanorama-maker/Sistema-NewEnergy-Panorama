@@ -1,188 +1,180 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Inventario | Panorama Health</title>
+    <title>Estoque | Panorama Health</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .tabs { display: flex; gap: 8px; margin-bottom: 25px; background: #F1F5F9; padding: 5px; border-radius: 10px; }
-        .tabs button { margin: 0; background: transparent; color: #64748B; padding: 10px; font-size: 13px; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #f1f5f9; padding: 5px; border-radius: 12px; }
+        .tabs button { margin: 0; background: transparent; font-size: 13px; padding: 10px; }
         .tabs button.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .section { display: none; }
-        .section.active { display: block; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .section.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
-
 <header>
-    <div style="display: flex; align-items: center; gap: 15px;">
-        <img src="logo.png" class="logo">
-        <h1>Inventario Profesional</h1>
-    </div>
-    <button onclick="window.location.href='painel.html'" style="width: auto; padding: 8px 16px; background: #F1F5F9; color: #475569; margin: 0;">Volver</button>
+    <h1>Gestão de Materiais</h1>
+    <button onclick="window.location.href='painel.html'" style="width: auto; padding: 5px 15px; margin:0">Voltar</button>
 </header>
 
-<div class="main" style="padding-top: 2rem;">
-    <div class="container" style="max-width: 900px;">
+<div class="main">
+    <div class="container" style="max-width: 800px;">
         <div class="tabs">
-            <button onclick="mostrar('cadastro',this)" class="active">Registro</button>
-            <button onclick="mostrar('mov',this)">Movimientos</button>
-            <button onclick="mostrar('atual',this)">Stock Actual</button>
+            <button onclick="mostrar('cadastro',this)" class="active">Novo Produto</button>
+            <button onclick="mostrar('mov',this)">Movimentação</button>
+            <button onclick="mostrar('atual',this)">Estoque Atual</button>
             <button onclick="mostrar('minimo',this)">Alertas</button>
         </div>
 
         <div id="cadastro" class="section active">
-            <h2>Nuevo Producto</h2>
+            <h2>Cadastrar Material</h2>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <input type="text" id="pn" placeholder="Part Number">
-                <input type="text" id="name" placeholder="Nombre del Material">
-                <input type="text" id="fabricante" placeholder="Fabricante">
-                <input type="text" id="sn" placeholder="Serial Number (SN)">
-                <input type="number" id="min" placeholder="Stock Mínimo">
+                <input type="text" id="name" placeholder="Nome do Item">
+                <input type="text" id="fab" placeholder="Fabricante">
+                <input type="number" id="min" placeholder="Qtd Mínima">
             </div>
-            <button class="primary" onclick="cadastrarProduto()">Registrar en Base de Datos</button>
+            <button class="primary" onclick="cadastrar()">Salvar Produto</button>
         </div>
 
         <div id="mov" class="section">
-            <h2>Movimentación de Carga</h2>
-            <input list="listaProdutos" id="movPN" placeholder="Escriba Part Number...">
-            <datalist id="listaProdutos"></datalist>
-            <input type="text" id="movName" placeholder="Nombre (Auto)" readonly style="background:#F9FAFB">
-            <input type="number" id="movQtd" placeholder="Cantidad">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <input type="text" id="origem" placeholder="Origen">
-                <input type="text" id="destino" placeholder="Destino">
-            </div>
+            <h2>Entrada / Saída</h2>
+            <input list="produtosList" id="movPN" placeholder="Part Number">
+            <datalist id="produtosList"></datalist>
+            <input type="number" id="movQtd" placeholder="Quantidade">
             <select id="tipo">
                 <option value="entrada">Entrada (+)</option>
-                <option value="saida">Salida (-)</option>
+                <option value="saida">Saída (-)</option>
             </select>
-            <button class="primary" onclick="registrarMov()">Confirmar Operación</button>
+            <button class="primary" onclick="movimentar()">Registrar</button>
         </div>
 
         <div id="atual" class="section">
-            <h2>Stock Consolidado</h2>
+            <h2>Saldo em Estoque</h2>
             <table>
-                <thead>
-                    <tr><th>Part Number</th><th>Nombre</th><th>Saldo</th></tr>
-                </thead>
-                <tbody id="tabelaAtual"></tbody>
+                <thead><tr><th>PN</th><th>Nome</th><th>Saldo</th></tr></thead>
+                <tbody id="tabEstoque"></tbody>
             </table>
         </div>
 
         <div id="minimo" class="section">
-            <h2>Alertas de Reposición</h2>
-            <div id="alertas"></div>
+            <h2>Alertas de Reposição</h2>
+            <div id="alertasContainer"></div>
         </div>
     </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
-  authDomain: "sistema-newenergy-panora-24697.firebaseapp.com",
-  projectId: "sistema-newenergy-panora-24697",
-  storageBucket: "sistema-newenergy-panora-24697.firebasestorage.app",
-  messagingSenderId: "503251309234",
-  appId: "1:503251309234:web:8f4d905e5e4b1f496befab"
+    apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
+    authDomain: "sistema-newenergy-panora-24697.firebaseapp.com",
+    projectId: "sistema-newenergy-panora-24697",
+    storageBucket: "sistema-newenergy-panora-24697.firebasestorage.app",
+    messagingSenderId: "503251309234",
+    appId: "1:503251309234:web:8f4d905e5e4b1f496befab"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.mostrar = (sec, btn) => {
+// Navegação entre abas
+window.mostrar = (id, btn) => {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-    document.getElementById(sec).classList.add('active');
+    document.getElementById(id).classList.add('active');
     btn.classList.add('active');
-    if(sec==="atual") carregarEstoque();
-    if(sec==="minimo") verificarMinimo();
+    if(id === 'atual') carregarSaldo();
+    if(id === 'minimo') verificarMinimo();
 };
 
-window.cadastrarProduto = async function() {
-    const data = {
-        partNumber: document.getElementById("pn").value,
-        partName: document.getElementById("name").value,
-        fabricante: document.getElementById("fabricante").value,
-        serialNumber: document.getElementById("sn").value,
-        estoqueMinimo: parseInt(document.getElementById("min").value) || 0,
-        createdAt: serverTimestamp()
-    };
-    if(!data.partNumber || !data.partName) return alert("Faltan datos");
-    await addDoc(collection(db, "produtos"), data);
-    alert("Producto registrado");
-    location.reload();
+// Cadastrar Produto
+window.cadastrar = async () => {
+    const pn = document.getElementById('pn').value;
+    const name = document.getElementById('name').value;
+    if(!pn || !name) return alert("Preencha PN e Nome");
+    
+    try {
+        await addDoc(collection(db, "produtos"), {
+            pn, name, fab: document.getElementById('fab').value,
+            min: parseInt(document.getElementById('min').value) || 0,
+            criadoEm: serverTimestamp()
+        });
+        alert("Produto salvo!");
+        location.reload();
+    } catch(e) { alert("Erro: " + e.message); }
 };
 
-async function carregarProdutos() {
+// Carregar lista para o autocomplete
+const carregarLista = async () => {
     const snap = await getDocs(collection(db, "produtos"));
-    const lista = document.getElementById("listaProdutos");
+    const list = document.getElementById('produtosList');
     snap.forEach(doc => {
-        const p = doc.data();
-        const opt = document.createElement("option");
-        opt.value = p.partNumber;
-        lista.appendChild(opt);
+        const opt = document.createElement('option');
+        opt.value = doc.data().pn;
+        list.appendChild(opt);
     });
-}
-carregarProdutos();
+};
+carregarLista();
 
-document.getElementById("movPN").addEventListener("change", async e => {
-    const snap = await getDocs(collection(db, "produtos"));
-    snap.forEach(doc => {
-        if(doc.data().partNumber === e.target.value) 
-            document.getElementById("movName").value = doc.data().partName;
+// Registrar Movimentação
+window.movimentar = async () => {
+    const pn = document.getElementById('movPN').value;
+    const qtd = parseInt(document.getElementById('movQtd').value);
+    if(!pn || !qtd) return alert("Preencha os campos");
+
+    await addDoc(collection(db, "movimentacoes"), {
+        pn, qtd, tipo: document.getElementById('tipo').value,
+        data: serverTimestamp()
     });
-});
-
-window.registrarMov = async function() {
-    const mov = {
-        partNumber: document.getElementById("movPN").value,
-        partName: document.getElementById("movName").value,
-        quantidade: parseInt(document.getElementById("movQtd").value),
-        tipo: document.getElementById("tipo").value,
-        createdAt: serverTimestamp()
-    };
-    await addDoc(collection(db, "movimentacoes"), mov);
-    alert("Movimiento registrado");
+    alert("Registrado!");
+    document.getElementById('movQtd').value = "";
 };
 
-async function carregarEstoque() {
-    const tabela = document.getElementById("tabelaAtual");
-    tabela.innerHTML = "";
-    const snap = await getDocs(collection(db, "movimentacoes"));
-    const mapa = {};
-    snap.forEach(doc => {
-        const d = doc.data();
-        if(!mapa[d.partNumber]) mapa[d.partNumber] = {name: d.partName, saldo: 0};
-        mapa[d.partNumber].saldo += (d.tipo === "entrada" ? d.quantidade : -d.quantidade);
-    });
-    for(const pn in mapa) {
-        tabela.innerHTML += `<tr><td>${pn}</td><td>${mapa[pn].name}</td><td>${mapa[pn].saldo}</td></tr>`;
-    }
-}
-
-async function verificarMinimo() {
-    const div = document.getElementById("alertas");
-    div.innerHTML = "";
-    const prods = await getDocs(collection(db, "produtos"));
+// Calcular Saldo Atual
+async function calcularSaldos() {
     const movs = await getDocs(collection(db, "movimentacoes"));
-    const saldo = {};
-    movs.forEach(d => {
-        if(!saldo[d.data().partNumber]) saldo[d.data().partNumber] = 0;
-        saldo[d.data().partNumber] += (d.data().tipo === "entrada" ? d.data().quantidade : -d.data().quantidade);
+    const produtos = await getDocs(collection(db, "produtos"));
+    let saldos = {};
+    
+    produtos.forEach(p => {
+        saldos[p.data().pn] = { nome: p.data().name, min: p.data().min, total: 0 };
     });
-    prods.forEach(d => {
-        const p = d.data();
-        const atual = saldo[p.partNumber] || 0;
-        if(atual <= p.estoqueMinimo) {
-            div.innerHTML += `<div class="alerta">⚠️ ${p.partName} (${p.partNumber}) - Saldo: ${atual} (Mín: ${p.estoqueMinimo})</div>`;
+
+    movs.forEach(m => {
+        const d = m.data();
+        if(saldos[d.pn]) {
+            saldos[d.pn].total += (d.tipo === 'entrada' ? d.qtd : -d.qtd);
         }
     });
+    return saldos;
 }
+
+window.carregarSaldo = async () => {
+    const tab = document.getElementById('tabEstoque');
+    tab.innerHTML = "Carregando...";
+    const saldos = await calcularSaldos();
+    tab.innerHTML = "";
+    for(let pn in saldos) {
+        tab.innerHTML += `<tr><td>${pn}</td><td>${saldos[pn].nome}</td><td><b>${saldos[pn].total}</b></td></tr>`;
+    }
+};
+
+window.verificarMinimo = async () => {
+    const cont = document.getElementById('alertasContainer');
+    cont.innerHTML = "Verificando...";
+    const saldos = await calcularSaldos();
+    cont.innerHTML = "";
+    for(let pn in saldos) {
+        if(saldos[pn].total <= saldos[pn].min) {
+            cont.innerHTML += `<div class="alerta">⚠️ <b>${saldos[pn].nome}</b> está abaixo do mínimo! (Saldo: ${saldos[pn].total})</div>`;
+        }
+    }
+};
 </script>
 </body>
 </html>
