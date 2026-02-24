@@ -1,48 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Painel - Panorama Health</title>
+    <title>Painel | Panorama</title>
 </head>
-<body class="auth-container">
-    <div class="card" style="max-width: 500px;">
-        <img src="logo.png" class="logo-img">
-        <h2 style="margin-bottom: 5px;">Painel de Controle</h2>
-        <div id="uInfo" style="font-size: 14px; margin-bottom: 2rem; color: var(--text-muted);">Identificando usuário...</div>
+<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
 
-        <div style="display: grid; gap: 12px;">
-            <button class="btn btn-primary" onclick="window.location.href='estoque.html'">
-                📦 CONTROLE DE ESTOQUE
-            </button>
-            <button class="btn" style="background: #f1f5f9; color: var(--text-main);" onclick="logout()">
-                SAIR DO SISTEMA
-            </button>
-        </div>
+<div class="auth-box" style="max-width: 500px;">
+    <img src="logo.png" class="logo-login">
+    <h2 id="uEmail" style="font-size: 1rem; color: var(--text-muted); margin-bottom: 2rem;">...</h2>
+    
+    <div style="display: grid; gap: 15px;">
+        <button class="btn btn-primary" onclick="window.location.href='estoque.html'">🚀 ACEDER AO STOCK</button>
+        <button class="btn" style="background: #f1f5f9; color: var(--text);" onclick="logout()">SAIR</button>
     </div>
+</div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
-            authDomain: "sistema-newenergy-panora-24697.firebaseapp.com",
-            projectId: "sistema-newenergy-panora-24697",
-            storageBucket: "sistema-newenergy-panora-24697.firebasestorage.app",
-            messagingSenderId: "503251309234",
-            appId: "1:503251309234:web:8f4d905e5e4b1f496befab"
-        };
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+    const firebaseConfig = {
+        apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
+        authDomain: "sistema-newenergy-panora-24697.firebaseapp.com",
+        projectId: "sistema-newenergy-panora-24697",
+        storageBucket: "sistema-newenergy-panora-24697.firebasestorage.app",
+        messagingSenderId: "503251309234",
+        appId: "1:503251309234:web:8f4d905e5e4b1f496befab"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-        onAuthStateChanged(auth, user => {
-            if (user) document.getElementById('uInfo').innerText = user.email;
-            else window.location.href = "login.html";
-        });
+    onAuthStateChanged(auth, user => {
+        if (user) document.getElementById('uEmail').innerText = "Sessão ativa: " + user.email;
+        else window.location.href = "login.html";
+    });
 
-        window.logout = () => signOut(auth).then(() => window.location.href = "login.html");
-    </script>
+    window.logout = () => signOut(auth).then(() => window.location.href = "login.html");
+</script>
 </body>
 </html>
