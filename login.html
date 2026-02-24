@@ -2,28 +2,28 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Login | Panorama Health</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso | Panorama</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-<div class="main">
-    <div class="container" style="max-width: 400px;">
-        <div style="text-align: center; margin-bottom: 1.5rem;">
-            <img src="logo.png" class="logo" onerror="this.style.display='none'">
-            <h2 style="margin-top:10px">Acesso Restrito</h2>
-        </div>
+<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;">
 
-        <input type="email" id="email" placeholder="E-mail corporativo">
-        <input type="password" id="senha" placeholder="Senha">
-
-        <button class="primary" onclick="login()">Entrar no Sistema</button>
-        <button class="google" onclick="loginGoogle()">Entrar com Google</button>
-    </div>
+<div class="login-box">
+    <img src="logo.png" class="logo-login" alt="Panorama Health">
+    <h2 style="color: var(--primary); margin-bottom: 1.5rem;">Acesso ao Sistema</h2>
+    
+    <input type="email" id="email" placeholder="E-mail corporativo" style="margin-bottom: 10px;">
+    <input type="password" id="senha" placeholder="Senha" style="margin-bottom: 20px;">
+    
+    <button class="btn-primary" onclick="login()">ENTRAR</button>
+    <button onclick="loginGoogle()" style="margin-top:10px; background:white; border:1px solid #ddd; padding:10px; width:100%; border-radius:10px; cursor:pointer;">
+        Entrar com Google
+    </button>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
@@ -37,17 +37,17 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-onAuthStateChanged(auth, user => { if (user) window.location.href = "painel.html"; });
-
 window.login = () => {
     const email = document.getElementById("email").value;
     const senha = document.getElementById("senha").value;
-    signInWithEmailAndPassword(auth, email, senha).catch(err => alert("Erro: " + err.message));
+    signInWithEmailAndPassword(auth, email, senha)
+        .then(() => window.location.href = "painel.html")
+        .catch(err => alert("Erro: " + err.message));
 };
 
 window.loginGoogle = () => {
     const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider).catch(err => alert("Erro: " + err.message));
+    signInWithPopup(auth, provider).then(() => window.location.href = "painel.html");
 };
 </script>
 </body>
