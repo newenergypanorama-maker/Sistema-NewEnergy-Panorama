@@ -1,36 +1,31 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acesso | Panorama Health</title>
+    <title>Login | Panorama Health</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="auth-container">
+<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f1f5f9;">
 
-<div class="card">
-    <img src="logo.png" class="logo-img" alt="Panorama Health">
-    <h2 style="margin-bottom: 0.5rem;">Acesso ao Sistema</h2>
-    <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem;">Entre com suas credenciais</p>
-    
-    <div class="input-group">
-        <label>E-mail Corporativo</label>
-        <input type="email" id="email" placeholder="exemplo@panorama.com">
-    </div>
-    
-    <div class="input-group" style="margin-top: 1rem;">
-        <label>Senha</label>
-        <input type="password" id="senha" placeholder="••••••••">
-    </div>
-    
-    <button class="btn btn-primary" style="margin-top: 2rem;" onclick="login()">ENTRAR</button>
-    
-    <div style="margin: 1.5rem 0; display: flex; align-items: center; gap: 10px; color: var(--border);">
-        <hr style="flex:1"> <span style="font-size: 12px;">OU</span> <hr style="flex:1">
+<div class="auth-box">
+    <img src="logo.png" class="logo-login" alt="Logo">
+    <h2 style="margin-bottom: 0.5rem;">Bem-vindo</h2>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">Controlo de Stock Profissional</p>
+
+    <div style="text-align: left;">
+        <label style="font-size: 0.75rem; font-weight: 700;">E-MAIL CORPORATIVO</label>
+        <input type="email" id="email" placeholder="nome@empresa.pt">
+        
+        <div style="margin-top: 1.5rem;">
+            <label style="font-size: 0.75rem; font-weight: 700;">SENHA</label>
+            <input type="password" id="senha" placeholder="••••••••">
+        </div>
     </div>
 
-    <button onclick="loginGoogle()" style="width:100%; background:white; border:1px solid var(--border); padding:10px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:600;">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Google
+    <button class="btn btn-primary" style="margin-top: 2rem;" onclick="login()">ENTRAR NO SISTEMA</button>
+    <button onclick="loginGoogle()" style="margin-top: 1rem; width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; background:white; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font-weight:600;">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Entrar com Google
     </button>
 </div>
 
@@ -55,7 +50,7 @@
         const senha = document.getElementById("senha").value;
         signInWithEmailAndPassword(auth, email, senha)
             .then(() => window.location.href = "painel.html")
-            .catch(err => alert("Erro ao entrar: Verifique e-mail e senha."));
+            .catch(err => alert("Erro: Email ou senha inválidos."));
     };
 
     window.loginGoogle = () => {
