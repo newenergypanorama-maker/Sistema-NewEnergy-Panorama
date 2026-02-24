@@ -2,12 +2,12 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Estoque | Panorama Health</title>
+    <title>Estoque Pro | Panorama Health</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #f1f5f9; padding: 5px; border-radius: 12px; }
-        .tabs button { margin: 0; background: transparent; font-size: 13px; padding: 10px; }
-        .tabs button.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #f1f5f9; padding: 5px; border-radius: 12px; overflow-x: auto; }
+        .tabs button { white-space: nowrap; flex: 1; background: transparent; font-size: 12px; padding: 10px; border: none; cursor: pointer; }
+        .tabs button.active { background: white; color: #1E3A8A; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-weight: bold; border-radius: 8px; }
         .section { display: none; }
         .section.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -15,48 +15,85 @@
 </head>
 <body>
 <header>
-    <h1>Gestão de Materiais</h1>
+    <h1>Gestão Hospitalar - NewEnergy</h1>
+    <div id="userLabel" style="font-size: 12px; color: #64748B;">Carregando usuário...</div>
     <button onclick="window.location.href='painel.html'" style="width: auto; padding: 5px 15px; margin:0">Voltar</button>
 </header>
 
 <div class="main">
-    <div class="container" style="max-width: 800px;">
+    <div class="container" style="max-width: 1000px;">
         <div class="tabs">
-            <button onclick="mostrar('cadastro',this)" class="active">Novo Produto</button>
+            <button onclick="mostrar('cadastro',this)" class="active">Novo Cadastro</button>
             <button onclick="mostrar('mov',this)">Movimentação</button>
             <button onclick="mostrar('atual',this)">Estoque Atual</button>
+            <button onclick="mostrar('hist',this)">Histórico</button>
             <button onclick="mostrar('minimo',this)">Alertas</button>
         </div>
 
         <div id="cadastro" class="section active">
-            <h2>Cadastrar Material</h2>
+            <h2>Cadastrar Novo Material</h2>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <input type="text" id="pn" placeholder="Part Number">
-                <input type="text" id="name" placeholder="Nome do Item">
+                <input type="text" id="pn" placeholder="Part Number (Obrigatório)">
+                <input type="text" id="name" placeholder="Nome do Item (Obrigatório)">
+                <input type="text" id="sn" placeholder="Número de Série (S/N)">
                 <input type="text" id="fab" placeholder="Fabricante">
-                <input type="number" id="min" placeholder="Qtd Mínima">
+                <input type="number" id="min" placeholder="Qtd Mínima de Segurança">
             </div>
-            <button class="primary" onclick="cadastrar()">Salvar Produto</button>
+            <button class="primary" onclick="cadastrar()">Finalizar Cadastro</button>
         </div>
 
         <div id="mov" class="section">
-            <h2>Entrada / Saída</h2>
-            <input list="produtosList" id="movPN" placeholder="Part Number">
+            <h2>Registrar Entrada / Saída</h2>
+            <input list="produtosList" id="movPN" placeholder="Buscar Part Number...">
             <datalist id="produtosList"></datalist>
             <input type="number" id="movQtd" placeholder="Quantidade">
+            <input type="text" id="movSN" placeholder="Número de Série desta unidade (Opcional)">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="text" id="origem" placeholder="Origem">
+                <input type="text" id="destino" placeholder="Destino">
+            </div>
             <select id="tipo">
                 <option value="entrada">Entrada (+)</option>
                 <option value="saida">Saída (-)</option>
             </select>
-            <button class="primary" onclick="movimentar()">Registrar</button>
+            <button class="primary" onclick="movimentar()">Confirmar Operação</button>
         </div>
 
         <div id="atual" class="section">
-            <h2>Saldo em Estoque</h2>
+            <h2>Saldo Consolidado</h2>
             <table>
-                <thead><tr><th>PN</th><th>Nome</th><th>Saldo</th></tr></thead>
+                <thead><tr><th>PN</th><th>Nome</th><th>Último S/N</th><th>Saldo Atual</th></tr></thead>
                 <tbody id="tabEstoque"></tbody>
             </table>
+        </div>
+
+        <div id="hist" class="section">
+            <h2>Histórico de Movimentações</h2>
+            <div class="filtros">
+                <input type="text" id="fPN" placeholder="Filtrar PN...">
+                <input type="text" id="fResp" placeholder="Filtrar Responsável...">
+                <select id="fTipo">
+                    <option value="">Todos Tipos</option>
+                    <option value="entrada">Entradas</option>
+                    <option value="saida">Saídas</option>
+                </select>
+                <button class="primary" style="margin:0; padding:10px" onclick="carregarHistorico()">🔎</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="table-historico">
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>PN</th>
+                            <th>Tipo</th>
+                            <th>Qtd</th>
+                            <th>S/N</th>
+                            <th>Responsável</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabHist"></tbody>
+                </table>
+            </div>
         </div>
 
         <div id="minimo" class="section">
@@ -68,7 +105,8 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDvmATRrkhu-rJFpr2Ql_gYhIBK7sqdssQ",
@@ -81,74 +119,119 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-// Navegação entre abas
+let usuarioLogado = "";
+
+onAuthStateChanged(auth, user => {
+    if (user) {
+        usuarioLogado = user.email;
+        document.getElementById('userLabel').innerText = "Operador: " + user.email;
+    } else {
+        window.location.href = "login.html";
+    }
+});
+
 window.mostrar = (id, btn) => {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     btn.classList.add('active');
     if(id === 'atual') carregarSaldo();
+    if(id === 'hist') carregarHistorico();
     if(id === 'minimo') verificarMinimo();
 };
 
-// Cadastrar Produto
+// --- FUNÇÃO CADASTRAR ---
 window.cadastrar = async () => {
     const pn = document.getElementById('pn').value;
     const name = document.getElementById('name').value;
-    if(!pn || !name) return alert("Preencha PN e Nome");
-    
+    if(!pn || !name) return alert("PN e Nome são obrigatórios!");
+
     try {
         await addDoc(collection(db, "produtos"), {
-            pn, name, fab: document.getElementById('fab').value,
+            pn, name, 
+            sn: document.getElementById('sn').value,
+            fab: document.getElementById('fab').value,
             min: parseInt(document.getElementById('min').value) || 0,
-            criadoEm: serverTimestamp()
+            responsavel: usuarioLogado,
+            dataHora: serverTimestamp()
         });
-        alert("Produto salvo!");
+        alert("✅ Produto cadastrado!");
         location.reload();
-    } catch(e) { alert("Erro: " + e.message); }
+    } catch(e) { alert("Erro ao cadastrar: " + e.message); }
 };
 
-// Carregar lista para o autocomplete
-const carregarLista = async () => {
-    const snap = await getDocs(collection(db, "produtos"));
-    const list = document.getElementById('produtosList');
-    snap.forEach(doc => {
-        const opt = document.createElement('option');
-        opt.value = doc.data().pn;
-        list.appendChild(opt);
-    });
-};
-carregarLista();
-
-// Registrar Movimentação
+// --- FUNÇÃO MOVIMENTAR ---
 window.movimentar = async () => {
     const pn = document.getElementById('movPN').value;
     const qtd = parseInt(document.getElementById('movQtd').value);
-    if(!pn || !qtd) return alert("Preencha os campos");
+    if(!pn || !qtd) return alert("Preencha PN e Quantidade!");
 
-    await addDoc(collection(db, "movimentacoes"), {
-        pn, qtd, tipo: document.getElementById('tipo').value,
-        data: serverTimestamp()
-    });
-    alert("Registrado!");
-    document.getElementById('movQtd').value = "";
+    try {
+        await addDoc(collection(db, "movimentacoes"), {
+            pn, 
+            qtd, 
+            sn: document.getElementById('movSN').value || "N/A",
+            tipo: document.getElementById('tipo').value,
+            origem: document.getElementById('origem').value || "N/A",
+            destino: document.getElementById('destino').value || "N/A",
+            responsavel: usuarioLogado,
+            dataHora: serverTimestamp()
+        });
+        alert("✅ Movimentação registrada!");
+        document.getElementById('movQtd').value = "";
+    } catch(e) { alert("Erro: " + e.message); }
 };
 
-// Calcular Saldo Atual
-async function calcularSaldos() {
-    const movs = await getDocs(collection(db, "movimentacoes"));
-    const produtos = await getDocs(collection(db, "produtos"));
-    let saldos = {};
+// --- HISTÓRICO COM FILTROS ---
+window.carregarHistorico = async () => {
+    const tab = document.getElementById('tabHist');
+    tab.innerHTML = "Buscando dados...";
     
-    produtos.forEach(p => {
-        saldos[p.data().pn] = { nome: p.data().name, min: p.data().min, total: 0 };
-    });
+    const q = query(collection(db, "movimentacoes"), orderBy("dataHora", "desc"));
+    const snap = await getDocs(q);
+    
+    const fPN = document.getElementById('fPN').value.toLowerCase();
+    const fResp = document.getElementById('fResp').value.toLowerCase();
+    const fTipo = document.getElementById('fTipo').value;
 
+    tab.innerHTML = "";
+    snap.forEach(doc => {
+        const d = doc.data();
+        const dataFormatada = d.dataHora ? d.dataHora.toDate().toLocaleString('pt-BR') : 'Processando...';
+        
+        // Filtros Lógicos
+        if(fPN && !d.pn.toLowerCase().includes(fPN)) return;
+        if(fResp && !d.responsavel.toLowerCase().includes(fResp)) return;
+        if(fTipo && d.tipo !== fTipo) return;
+
+        tab.innerHTML += `
+            <tr>
+                <td>${dataFormatada}</td>
+                <td><b>${d.pn}</b></td>
+                <td><span class="badge badge-${d.tipo}">${d.tipo}</span></td>
+                <td>${d.qtd}</td>
+                <td>${d.sn || 'N/A'}</td>
+                <td style="font-size:10px">${d.responsavel}</td>
+            </tr>`;
+    });
+};
+
+// --- SALDO E ALERTAS (Lógica de cálculo) ---
+async function calcularDados() {
+    const movs = await getDocs(collection(db, "movimentacoes"));
+    const prods = await getDocs(collection(db, "produtos"));
+    let saldos = {};
+    prods.forEach(p => {
+        const data = p.data();
+        saldos[data.pn] = { nome: data.name, min: data.min, total: 0, lastSN: data.sn };
+    });
     movs.forEach(m => {
         const d = m.data();
         if(saldos[d.pn]) {
             saldos[d.pn].total += (d.tipo === 'entrada' ? d.qtd : -d.qtd);
+            if(d.sn && d.sn !== "N/A") saldos[d.pn].lastSN = d.sn;
         }
     });
     return saldos;
@@ -156,25 +239,37 @@ async function calcularSaldos() {
 
 window.carregarSaldo = async () => {
     const tab = document.getElementById('tabEstoque');
-    tab.innerHTML = "Carregando...";
-    const saldos = await calcularSaldos();
+    tab.innerHTML = "Calculando...";
+    const saldos = await calcularDados();
     tab.innerHTML = "";
     for(let pn in saldos) {
-        tab.innerHTML += `<tr><td>${pn}</td><td>${saldos[pn].nome}</td><td><b>${saldos[pn].total}</b></td></tr>`;
+        tab.innerHTML += `<tr><td>${pn}</td><td>${saldos[pn].nome}</td><td>${saldos[pn].lastSN || '-'}</td><td><b>${saldos[pn].total}</b></td></tr>`;
     }
 };
 
 window.verificarMinimo = async () => {
     const cont = document.getElementById('alertasContainer');
-    cont.innerHTML = "Verificando...";
-    const saldos = await calcularSaldos();
+    const saldos = await calcularDados();
     cont.innerHTML = "";
     for(let pn in saldos) {
         if(saldos[pn].total <= saldos[pn].min) {
-            cont.innerHTML += `<div class="alerta">⚠️ <b>${saldos[pn].nome}</b> está abaixo do mínimo! (Saldo: ${saldos[pn].total})</div>`;
+            cont.innerHTML += `<div class="alerta">⚠️ <b>${saldos[pn].nome}</b> (${pn}) - Saldo: ${saldos[pn].total} (Mín: ${saldos[pn].min})</div>`;
         }
     }
 };
+
+// Autocomplete simples
+const carregarDatalist = async () => {
+    const snap = await getDocs(collection(db, "produtos"));
+    const dl = document.getElementById('produtosList');
+    snap.forEach(doc => {
+        const opt = document.createElement('option');
+        opt.value = doc.data().pn;
+        dl.appendChild(opt);
+    });
+};
+carregarDatalist();
+
 </script>
 </body>
 </html>
