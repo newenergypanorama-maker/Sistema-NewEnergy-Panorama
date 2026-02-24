@@ -1,80 +1,60 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estoque | Panorama Health</title>
     <link rel="stylesheet" href="style.css">
+    <title>Estoque - Panorama</title>
 </head>
 <body>
 
 <header>
-    <h1 style="font-size: 1rem;">PANORAMA HEALTH</h1>
-    <div id="uEmail" style="font-size: 0.7rem;">...</div>
-    <button onclick="window.location.href='painel.html'" style="background:none; border:none; color:var(--primary); font-weight:bold; cursor:pointer;">VOLTAR</button>
+    <div style="font-weight: bold;">PANORAMA HEALTH</div>
+    <div id="uEmail" style="font-size: 12px;">...</div>
+    <button onclick="window.location.href='painel.html'" style="background:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">VOLTAR</button>
 </header>
 
-<div style="padding: 1rem; max-width: 1100px; margin: auto;">
+<div class="container">
     <div class="tabs">
         <button onclick="aba(event, 'cad')" class="active">CADASTRO</button>
         <button onclick="aba(event, 'mov')">MOVIMENTAÇÃO</button>
-        <button onclick="aba(event, 'est')">ESTOQUE</button>
+        <button onclick="aba(event, 'est')">SALDOS</button>
         <button onclick="aba(event, 'his')">HISTÓRICO</button>
         <button onclick="aba(event, 'ale')">ALERTAS</button>
     </div>
 
     <div id="cad" class="section active">
-        <div class="grid-form">
-            <input type="text" id="pn" placeholder="Part Number">
-            <input type="text" id="name" placeholder="Nome do Item">
-            <input type="text" id="local" placeholder="Localização (Ex: Prateleira B)">
-            <input type="number" id="min" placeholder="Estoque Mínimo" value="2">
+        <div class="form-grid">
+            <div class="input-group"><label>PART NUMBER</label><input type="text" id="pn"></div>
+            <div class="input-group"><label>NOME DO ITEM</label><input type="text" id="name"></div>
+            <div class="input-group"><label>LOCALIZAÇÃO</label><input type="text" id="local"></div>
+            <div class="input-group"><label>ESTOQUE MÍNIMO</label><input type="number" id="min" value="2"></div>
         </div>
-        <button class="btn-primary" onclick="cadastrar()">SALVAR ITEM</button>
+        <button class="btn" onclick="cadastrar()">CADASTRAR ITEM</button>
     </div>
 
     <div id="mov" class="section">
-        <div class="grid-form">
-            <input list="listPN" id="mPN" onchange="sync(this.value, 'pn')" placeholder="Busca por PN">
-            <input list="listName" id="mName" onchange="sync(this.value, 'name')" placeholder="Busca por Nome">
-            <input type="number" id="mQtd" placeholder="Quantidade">
-            <input type="text" id="mLocal" placeholder="Local de Destino/Origem">
-            <select id="mTipo">
-                <option value="entrada">ENTRADA (+)</option>
-                <option value="saida">SAÍDA (-)</option>
-            </select>
-            <datalist id="listPN"></datalist>
-            <datalist id="listName"></datalist>
+        <div class="form-grid">
+            <div class="input-group"><label>BUSCAR PN</label><input list="lPN" id="mPN" onchange="sync(this.value, 'pn')"></div>
+            <div class="input-group"><label>BUSCAR NOME</label><input list="lName" id="mName" onchange="sync(this.value, 'name')"></div>
+            <div class="input-group"><label>QUANTIDADE</label><input type="number" id="mQtd"></div>
+            <div class="input-group"><label>TIPO</label><select id="mTipo"><option value="entrada">ENTRADA (+)</option><option value="saida">SAÍDA (-)</option></select></div>
+            <datalist id="lPN"></datalist><datalist id="lName"></datalist>
         </div>
-        <button class="btn-primary" onclick="movimentar()">REGISTRAR</button>
+        <button class="btn" onclick="movimentar()">REGISTRAR MOVIMENTAÇÃO</button>
     </div>
 
-    <div id="est" class="section">
-        <div class="table-container">
-            <table>
-                <thead><tr><th>PN</th><th>Item</th><th>Local</th><th>Saldo</th></tr></thead>
-                <tbody id="tabEst"></tbody>
-            </table>
-        </div>
-    </div>
-
+    <div id="est" class="section"><div class="table-area"><table><thead><tr><th>PN</th><th>NOME</th><th>LOCAL</th><th>SALDO</th></tr></thead><tbody id="tabEst"></tbody></table></div></div>
+    
     <div id="his" class="section">
-        <input type="text" id="fHist" placeholder="Filtrar por nome ou PN..." onkeyup="filtrarHist()" style="margin-bottom:10px; width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-        <div class="table-container">
-            <table>
-                <thead><tr><th>Data</th><th>Item</th><th>Tipo</th><th>Local</th><th>Qtd</th><th>Resp.</th></tr></thead>
-                <tbody id="tabHis"></tbody>
-            </table>
-        </div>
+        <input type="text" id="fHist" placeholder="Filtrar por PN ou Nome..." onkeyup="filtrarHist()" style="width:100%; padding:10px; margin-bottom:10px;">
+        <div class="table-area"><table><thead><tr><th>DATA</th><th>ITEM</th><th>TIPO</th><th>QTD</th><th>OPERADOR</th></tr></thead><tbody id="tabHis"></tbody></table></div>
     </div>
 
-    <div id="ale" class="section">
-        <div id="alertasContainer"></div>
-    </div>
+    <div id="ale" class="section"><div id="aleCont"></div></div>
 </div>
 
 <script type="module">
-    // IMPORTAÇÕES E CONFIGURAÇÃO FIREBASE (IGUAIS AO ANTERIOR)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -91,109 +71,71 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let userEmail = "";
-    let produtosCache = [];
+    let uEmail = ""; let pCache = [];
 
     onAuthStateChanged(auth, user => {
-        if (user) { userEmail = user.email; document.getElementById('uEmail').innerText = user.email; carregarBase(); }
-        else { window.location.href = "login.html"; }
+        if (user) { uEmail = user.email; document.getElementById('uEmail').innerText = user.email; loadBase(); }
+        else window.location.href = "login.html";
     });
 
     window.aba = (e, n) => {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-        document.getElementById(n).classList.add('active');
-        e.currentTarget.classList.add('active');
-        if(n === 'est') renderEstoque();
-        if(n === 'his') renderHistorico();
-        if(n === 'ale') renderAlertas();
+        document.getElementById(n).classList.add('active'); e.currentTarget.classList.add('active');
+        if(n === 'est') renderEstoque(); if(n === 'his') renderHistorico(); if(n === 'ale') renderAlertas();
     };
 
-    window.sync = (val, tipo) => {
-        const item = produtosCache.find(p => tipo === 'pn' ? p.pn === val : p.name === val);
-        if(item) {
-            document.getElementById('mPN').value = item.pn;
-            document.getElementById('mName').value = item.name;
-            document.getElementById('mLocal').value = item.local || "";
-        }
+    window.sync = (v, t) => {
+        const item = pCache.find(p => t === 'pn' ? p.pn === v : p.name === v);
+        if(item) { document.getElementById('mPN').value = item.pn; document.getElementById('mName').value = item.name; }
     };
 
-    async function carregarBase() {
+    async function loadBase() {
         const snap = await getDocs(collection(db, "produtos"));
-        produtosCache = [];
-        const dPN = document.getElementById('listPN');
-        const dName = document.getElementById('listName');
+        pCache = []; const dPN = document.getElementById('lPN'); const dName = document.getElementById('lName');
         dPN.innerHTML = ""; dName.innerHTML = "";
-        snap.forEach(doc => {
-            const d = doc.data(); produtosCache.push(d);
-            dPN.innerHTML += `<option value="${d.pn}">`;
-            dName.innerHTML += `<option value="${d.name}">`;
-        });
+        snap.forEach(doc => { const d = doc.data(); pCache.push(d); dPN.innerHTML += `<option value="${d.pn}">`; dName.innerHTML += `<option value="${d.name}">`; });
     }
 
     window.cadastrar = async () => {
-        const pn = document.getElementById('pn').value;
-        const name = document.getElementById('name').value;
-        if(!pn || !name) return alert("Erro");
-        await addDoc(collection(db, "produtos"), {
-            pn, name, local: document.getElementById('local').value,
-            min: parseInt(document.getElementById('min').value) || 0,
-            responsavel: userEmail, data: serverTimestamp()
-        });
+        await addDoc(collection(db, "produtos"), { pn: document.getElementById('pn').value, name: document.getElementById('name').value, local: document.getElementById('local').value, min: parseInt(document.getElementById('min').value), responsavel: uEmail, data: serverTimestamp() });
         location.reload();
     };
 
     window.movimentar = async () => {
-        const pn = document.getElementById('mPN').value;
-        const qtd = parseInt(document.getElementById('mQtd').value);
-        if(!pn || !qtd) return alert("Erro");
-        await addDoc(collection(db, "movimentacoes"), {
-            pn, qtd, tipo: document.getElementById('mTipo').value,
-            local: document.getElementById('mLocal').value,
-            responsavel: userEmail, data: serverTimestamp()
-        });
+        await addDoc(collection(db, "movimentacoes"), { pn: document.getElementById('mPN').value, qtd: parseInt(document.getElementById('mQtd').value), tipo: document.getElementById('mTipo').value, responsavel: uEmail, data: serverTimestamp() });
         location.reload();
     };
 
     async function getSaldos() {
-        const pS = await getDocs(collection(db, "produtos"));
-        const mS = await getDocs(collection(db, "movimentacoes"));
-        let saldos = {};
-        pS.forEach(d => { const v = d.data(); saldos[v.pn] = { nome: v.name, min: v.min, local: v.local, total: 0 }; });
-        mS.forEach(d => { const v = d.data(); if(saldos[v.pn]) saldos[v.pn].total += (v.tipo === 'entrada' ? v.qtd : -v.qtd); });
-        return saldos;
+        const pS = await getDocs(collection(db, "produtos")); const mS = await getDocs(collection(db, "movimentacoes"));
+        let s = {};
+        pS.forEach(d => { const v = d.data(); s[v.pn] = { nome: v.name, min: v.min, local: v.local, total: 0 }; });
+        mS.forEach(d => { const v = d.data(); if(s[v.pn]) s[v.pn].total += (v.tipo === 'entrada' ? v.qtd : -v.qtd); });
+        return s;
     }
 
     window.renderEstoque = async () => {
-        const d = await getSaldos();
-        const out = document.getElementById('tabEst'); out.innerHTML = "";
-        for(let k in d) out.innerHTML += `<tr><td><b>${k}</b></td><td>${d[k].nome}</td><td><span class="local-tag">${d[k].local || '-'}</span></td><td>${d[k].total}</td></tr>`;
+        const d = await getSaldos(); const out = document.getElementById('tabEst'); out.innerHTML = "";
+        for(let k in d) out.innerHTML += `<tr><td>${k}</td><td>${d[k].nome}</td><td>${d[k].local || '-'}</td><td><b>${d[k].total}</b></td></tr>`;
     };
 
     window.renderAlertas = async () => {
-        const d = await getSaldos();
-        const out = document.getElementById('alertasContainer'); out.innerHTML = "";
-        for(let k in d) {
-            if(d[k].total <= d[k].min) {
-                out.innerHTML += `<div class="alerta-card"><div><b>${d[k].nome}</b><br><small>Local: ${d[k].local}</small></div><div><b>Qtd: ${d[k].total}</b><br><small>Mín: ${d[k].min}</small></div></div>`;
-            }
-        }
+        const d = await getSaldos(); const out = document.getElementById('aleCont'); out.innerHTML = "";
+        for(let k in d) if(d[k].total <= d[k].min) out.innerHTML += `<div class="alerta-item"><div><b>${d[k].nome}</b><br>PN: ${k}</div><div>Atual: ${d[k].total} / Mín: ${d[k].min}</div></div>`;
     };
 
     let hCache = [];
     window.renderHistorico = async () => {
-        const q = query(collection(db, "movimentacoes"), orderBy("data", "desc"));
-        const snap = await getDocs(q); hCache = [];
-        snap.forEach(d => hCache.push(d.data()));
-        filtrarHist();
+        const snap = await getDocs(query(collection(db, "movimentacoes"), orderBy("data", "desc")));
+        hCache = []; snap.forEach(d => hCache.push(d.data())); filtrarHist();
     };
 
     window.filtrarHist = () => {
-        const t = document.getElementById('fHist').value.toLowerCase();
-        const out = document.getElementById('tabHis'); out.innerHTML = "";
+        const t = document.getElementById('fHist').value.toLowerCase(); const out = document.getElementById('tabHis'); out.innerHTML = "";
         hCache.filter(h => h.pn.toLowerCase().includes(t)).forEach(h => {
             const dt = h.data ? h.data.toDate().toLocaleString() : "...";
-            out.innerHTML += `<tr><td>${dt}</td><td>${h.pn}</td><td style="color:${h.tipo==='entrada'?'green':'red'}">${h.tipo}</td><td>${h.local || '-'}</td><td>${h.qtd}</td><td>${h.responsavel}</td></tr>`;
+            out.innerHTML += `<tr><td>${dt}</td><td>${h.pn}</td><td>${h.tipo}</td><td>${h.qtd}</td><td>${h.responsavel}</td></tr>`;
         });
     };
 </script>
